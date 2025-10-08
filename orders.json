@@ -1,0 +1,72 @@
+[
+  {
+    "id": "eaef3773-4ddc-4db0-b768-15df1bd0e849",
+    "user_id": 7234281238,
+    "username": "Gtgtgt760",
+    "account_id": "٨٦٧٦٤٣٢٤٥",
+    "item": "فري فاير 231",
+    "price": 38000,
+    "status": "مرفوض",
+    "type": "buy"
+  },
+  {
+    "id": "1f82ea8f-b9e8-45a7-b842-2aaf8e1b0bfb",
+    "user_id": 7234281238,
+    "username": "Gtgtgt760",
+    "account_id": "77566543135",
+    "item": "فري فاير 231",
+    "price": 38000,
+    "status": "مرفوض",
+    "type": "buy"
+  },
+  {
+    "id": "6b80d017-ed9c-4fd9-9cb4-31568cdab60b",
+    "type": "purchase",
+    "user_id": "7234281238",
+    "username": "Gtgtgt760",
+    "account_id": "71527252725",
+    "item": "فري فاير 110",
+    "price": 12000,
+    "status": "معلق"
+  },
+  {
+    "id": "f71532f9-a2e8-4a77-8bc6-715b8b308c57",
+    "type": "deposit",
+    "deposit_id": "5a4b75ed-e19c-46a3-a9da-0d6615da2f2b",
+    "user_id": "7234281238",
+    "username": "Gtgtgt760",
+    "account_id": "71527252725",
+    "operation": "74656454",
+    "status": "مقبول"
+  },
+  {
+    "id": "2e40d453-1c21-49b4-8ee3-97fe1a511268",
+    "type": "purchase",
+    "user_id": "7234281238",
+    "username": "Gtgtgt760",
+    "account_id": "71527252725",
+    "item": "فري فاير 231",
+    "price": 38000,
+    "status": "معلق"
+  },
+  {
+    "id": "292de4b0-bd65-46d1-9b0e-4b9e0291e5dd",
+    "type": "purchase",
+    "user_id": "7234281238",
+    "username": "Gtgtgt760",
+    "account_id": "71527252725",
+    "item": "فري فاير 110",
+    "price": 12000,
+    "status": "معلق"
+  },
+  {
+    "id": "4914b5ca-ceb0-4424-a6dd-f75f538b2c28",
+    "type": "purchase",
+    "user_id": "7234281238",
+    "username": "Gtgtgt760",
+    "account_id": "71527252725",
+    "item": "ببجي 60",
+    "price": 12000,
+    "status": "معلق"
+  }
+]
