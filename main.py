@@ -378,3 +378,21 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # ===== Keep-alive + تشغيل البوت 24/7 =====
+from threading import Thread
+
+def start_keep_alive():
+    # Flask لازم يكون هو التطبيق الرئيسي لـ Render
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
+def start_bot_thread():
+    # تأكد من أن run_telegram_bot موجود في كودك الأصلي
+    bot_thread = Thread(target=run_telegram_bot)
+    bot_thread.daemon = True
+    bot_thread.start()
+
+if __name__ == "__main__":
+    start_bot_thread()
+    start_keep_alive()
