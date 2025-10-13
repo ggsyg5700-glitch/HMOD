@@ -2,70 +2,41 @@ import os
 import sys
 import json
 import uuid
-import time
-import requests
 import datetime
-from threading import Thread
-from flask import Flask
-from typing import Dict
+import random
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+import requests
 
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    CallbackQueryHandler,
-    ContextTypes,
-    filters,
-)
-
+# =============================
+# حذف أي Webhook قديم لتجنب خطأ 409
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID") or 0)
-DEPOSIT_NUMBER = os.getenv("DEPOSIT_NUMBER") or "97675410"
-PORT = int(os.getenv("PORT", 5000))
+requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook")
 
 if not BOT_TOKEN:
     print("ERROR: BOT_TOKEN غير معرّف في متغيرات البيئة.")
     sys.exit(1)
 
+# =============================
+# ملفات البيانات
 GOODS_FILE = "goods.json"
 USERS_FILE = "users.json"
 ORDERS_FILE = "orders.json"
 BALANCE_FILE = "balance.json"
 PENDING_FILE = "pending.json"
 
-app = Flask("")
+# =============================
+# روابط الصور
+WELCOME_IMAGE_URL = "https://i.imgur.com/3iKcKqC.png"
+LOADING_IMAGES = [
+    "https://i.imgur.com/3iKcKqC.png",
+    "https://i.imgur.com/2h0X6sY.png",
+    "https://i.imgur.com/pX1aY0F.png",
+]
 
-@app.route("/")
-def home():
-    return "✅ البوت شغال تمام!"
-
-def run_web():
-    app.run(host="0.0.0.0", port=PORT)
-
-def ping_self():
-    url = None
-    if os.getenv('REPLIT_DOMAINS'):
-        url = f"https://{os.getenv('REPLIT_DOMAINS').split(',')[0].strip()}"
-    while True:
-        try:
-            if url:
-                requests.get(url, timeout=5)
-                print("🔁 Ping sent to keep alive.")
-        except Exception as e:
-            print(f"⚠️ Ping failed: {e}")
-        time.sleep(60)
-
-def keep_alive_threads():
-    t1 = Thread(target=run_web, daemon=True)
-    t1.start()
-    t2 = Thread(target=ping_self, daemon=True)
-    t2.start()
-
+# =============================
+# دوال مساعدة
 def load_json(path, default):
     if not os.path.exists(path):
         with open(path, "w", encoding="utf-8") as f:
@@ -81,41 +52,17 @@ def save_json(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-goods = load_json(GOODS_FILE, [
-    {"id":1,"name":"فري فاير 110","price":12000,"image":"https://i.imgur.com/1.png"},
-    {"id":2,"name":"فري فاير 231","price":38000,"image":"https://i.imgur.com/2.png"},
-    {"id":3,"name":"فري فاير 583","price":60000,"image":"https://i.imgur.com/3.png"},
-    {"id":4,"name":"فري فاير 1188","price":120000,"image":"https://i.imgur.com/4.png"},
-    {"id":5,"name":"فري فاير 2420","price":240000,"image":"https://i.imgur.com/5.png"},
-    {"id":6,"name":"ببجي 60","price":12000,"image":"https://i.imgur.com/6.png"},
-    {"id":7,"name":"ببجي 320","price":60000,"image":"https://i.imgur.com/7.png"},
-    {"id":8,"name":"ببجي 660","price":120000,"image":"https://i.imgur.com/8.png"},
-    {"id":9,"name":"ببجي 1800","price":280000,"image":"https://i.imgur.com/9.png"},
-    {"id":10,"name":"ببجي 3850","price":560000,"image":"https://i.imgur.com/10.png"}
-])
-
-users: Dict[str, Dict] = load_json(USERS_FILE, {})
-orders = load_json(ORDERS_FILE, [])
-balance = load_json(BALANCE_FILE, {})
-pending = load_json(PENDING_FILE, {})
-
-LOADING_IMAGES = [
-    "https://i.imgur.com/3iKcKqC.png",
-    "https://i.imgur.com/2h0X6sY.png",
-    "https://i.imgur.com/pX1aY0F.png",
-]
-
-import random
 def random_loading_image():
     return random.choice(LOADING_IMAGES)
 
 def build_main_keyboard(for_uid=None):
-    kb = []
-    kb.append([InlineKeyboardButton("🛍️ عرض السلع", callback_data="show_goods")])
-    kb.append([InlineKeyboardButton("📥 إيداع", callback_data="deposit")])
-    kb.append([InlineKeyboardButton("💳 رصيدك", callback_data="check_balance")])
-    kb.append([InlineKeyboardButton("🎮 لعبة (حجر/ورق/مقص)", callback_data="game_rps")])
-    kb.append([InlineKeyboardButton("💬 تواصل مع المسؤول", url="https://t.me/mhama1kjokbi")])
+    kb = [
+        [InlineKeyboardButton("🛍️ عرض السلع", callback_data="show_goods")],
+        [InlineKeyboardButton("📥 إيداع", callback_data="deposit")],
+        [InlineKeyboardButton("💳 رصيدك", callback_data="check_balance")],
+        [InlineKeyboardButton("🎮 لعبة (حجر/ورق/مقص)", callback_data="game_rps")],
+        [InlineKeyboardButton("💬 تواصل مع المسؤول", url="https://t.me/mhama1kjokbi")],
+    ]
     if str(for_uid) == str(ADMIN_ID):
         kb.append([InlineKeyboardButton("⚙️ لوحة الأدمن", callback_data="admin_panel")])
     return InlineKeyboardMarkup(kb)
@@ -128,109 +75,60 @@ def build_goods_keyboard():
     return InlineKeyboardMarkup(kb)
 
 def build_admin_keyboard():
-    kb = []
-    kb.append([InlineKeyboardButton("💳 شحن (عرض السلع كما للمستخدم)", callback_data="admin_show_goods")])
-    kb.append([InlineKeyboardButton("📋 عرض المستخدمين", callback_data="admin_show_users")])
-    kb.append([InlineKeyboardButton("💰 تعديل أسعار", callback_data="admin_edit_price")])
-    kb.append([InlineKeyboardButton("🕒 التاريخ والوقت", callback_data="admin_time")])
-    kb.append([InlineKeyboardButton("◀️ رجوع", callback_data="back_main")])
+    kb = [
+        [InlineKeyboardButton("💳 شحن (عرض السلع كما للمستخدم)", callback_data="admin_show_goods")],
+        [InlineKeyboardButton("📋 عرض المستخدمين", callback_data="admin_show_users")],
+        [InlineKeyboardButton("💰 تعديل أسعار", callback_data="admin_edit_price")],
+        [InlineKeyboardButton("🕒 التاريخ والوقت", callback_data="admin_time")],
+        [InlineKeyboardButton("◀️ رجوع", callback_data="back_main")]
+    ]
     return InlineKeyboardMarkup(kb)
 
+# =============================
+# تحميل البيانات
+goods = load_json(GOODS_FILE, [
+    {"id":1,"name":"فري فاير 110","price":12000,"image":"https://i.imgur.com/1.png"},
+    {"id":2,"name":"فري فاير 231","price":38000,"image":"https://i.imgur.com/2.png"},
+    {"id":3,"name":"فري فاير 583","price":60000,"image":"https://i.imgur.com/3.png"},
+    {"id":4,"name":"فري فاير 1188","price":120000,"image":"https://i.imgur.com/4.png"},
+    {"id":5,"name":"ببجي 60","price":12000,"image":"https://i.imgur.com/6.png"},
+    {"id":6,"name":"ببجي 320","price":60000,"image":"https://i.imgur.com/7.png"},
+])
+users = load_json(USERS_FILE, {})
+orders = load_json(ORDERS_FILE, [])
+balance = load_json(BALANCE_FILE, {})
+pending = load_json(PENDING_FILE, {})
+# =============================
+# دالة /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     context.user_data["expecting_account_id"] = True
-    
-    with open("attached_assets/IMG_20251011_215238_071_1760210123029.jpg", "rb") as photo:
+    try:
         await context.bot.send_photo(
             chat_id=update.effective_chat.id,
-            photo=photo,
-            caption="🎮 أهلاً بك في البوت! اضغط على أي زر للبدء 🔥\n\nأرسل **ID حساب اللعبة** الآن (يجب أن يكون **10 أرقام**) — سيُطلب في كل مرة.",
+            photo=WELCOME_IMAGE_URL,
+            caption=(
+                "🎮 أهلاً بك في البوت! اضغط على أي زر للبدء 🔥\n\n"
+                "أرسل **ID حساب اللعبة** الآن (يجب أن يكون **10 أرقام**) — سيُطلب في كل مرة."
+            ),
+            reply_markup=build_main_keyboard(for_uid=uid),
+            parse_mode="Markdown"
+        )
+    except:
+        await update.message.reply_text(
+            "🎮 أهلاً بك في البوت! اضغط على أي زر للبدء 🔥\n\n"
+            "أرسل **ID حساب اللعبة** الآن (يجب أن يكون **10 أرقام**) — سيُطلب في كل مرة.",
             reply_markup=build_main_keyboard(for_uid=uid),
             parse_mode="Markdown"
         )
 
-def get_user_record(uid_str):
-    return users.get(uid_str, {})
-
-def disable_message_buttons(context, chat_id, message_id, text=None):
-    try:
-        if text:
-            context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=text)
-        else:
-            context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
-    except Exception as e:
-        print("disable_message_buttons error:", e)
-
+# =============================
+# MessageHandler
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     text = update.message.text.strip()
 
-    if str(uid) == str(ADMIN_ID) and context.user_data.get("awaiting_deposit"):
-        deposit_id = context.user_data.pop("awaiting_deposit")
-        try:
-            amount = int(text.replace(",", "").strip())
-        except:
-            context.user_data["awaiting_deposit"] = deposit_id
-            await update.message.reply_text("❌ ادخل مبلغ صحيح بالأرقام فقط (مثال: 10000).")
-            return
-        dep = pending.get(deposit_id)
-        if not dep:
-            await update.message.reply_text("❌ لم أجد عملية الإيداع أو انتهت صلاحيتها.")
-            return
-        user_id = dep["user_id"]
-        balance[user_id] = balance.get(user_id, 0) + amount
-        save_json(BALANCE_FILE, balance)
-        for ord_ in orders:
-            if ord_.get("type") == "deposit" and ord_.get("deposit_id") == deposit_id:
-                ord_["status"] = "مقبول"
-        save_json(ORDERS_FILE, orders)
-        try:
-            await context.bot.send_message(chat_id=int(user_id), text=f"✅ تم قبول الإيداع وإضافة {amount} ل.س إلى رصيدك.")
-        except:
-            pass
-        if deposit_id in pending:
-            del pending[deposit_id]
-            save_json(PENDING_FILE, pending)
-        await update.message.reply_text(f"✅ Added {amount} ل.س to user {user_id}.")
-        return
-
-    if str(uid) == str(ADMIN_ID) and context.user_data.get("editing_price"):
-        edit_info = context.user_data.pop("editing_price")
-        item_id = edit_info.get("item_id")
-        try:
-            new_price = int(text.replace(",", "").strip())
-        except:
-            context.user_data["editing_price"] = edit_info
-            await update.message.reply_text("❌ ادخل سعر صحيح بالأرقام. مثال: 25000")
-            return
-        found = False
-        for it in goods:
-            if it["id"] == item_id:
-                it["price"] = new_price
-                found = True
-                break
-        if found:
-            save_json(GOODS_FILE, goods)
-            await update.message.reply_text(f"✅ تم تعديل سعر السلعة رقم {item_id} إلى {new_price} ل.س.")
-        else:
-            await update.message.reply_text("❌ لم أجد السلعة المطلوبة.")
-        return
-
-    if str(uid) == str(ADMIN_ID) and context.user_data.get("expecting_price_item"):
-        context.user_data.pop("expecting_price_item")
-        try:
-            item_id = int(text.strip())
-        except:
-            context.user_data["expecting_price_item"] = True
-            await update.message.reply_text("❌ ادخل رقم السلعة صحيح (مثال: 3).")
-            return
-        if not any(it["id"] == item_id for it in goods):
-            await update.message.reply_text("❌ ليست هناك سلعة بهذا الرقم. أعد المحاولة.")
-            return
-        context.user_data["editing_price"] = {"item_id": item_id}
-        await update.message.reply_text("📥 الآن أرسل السعر الجديد للسلعة (بالأرقام فقط).")
-        return
-
+    # تسجيل ID الحساب
     if context.user_data.get("expecting_account_id"):
         if not text.isdigit() or len(text) != 10:
             await update.message.reply_text("❌ يجب أن يكون ID الحساب **10 أرقام**. حاول مرة أخرى.", parse_mode="Markdown")
@@ -244,59 +142,61 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             balance[uid] = 0
             save_json(BALANCE_FILE, balance)
         context.user_data["expecting_account_id"] = False
-        await update.message.reply_text("✅ تم تسجيل ID حسابك بنجاح.\nاستخدم الأزرار لاختيار ما تريد.", reply_markup=build_main_keyboard(for_uid=uid))
+        await update.message.reply_text(
+            "✅ تم تسجيل ID حسابك بنجاح.\nاستخدم الأزرار لاختيار ما تريد.",
+            reply_markup=build_main_keyboard(for_uid=uid)
+        )
         return
 
-    if context.user_data.get("expecting_deposit"):
-        operation = text
-        deposit_id = str(uuid.uuid4())
-        pending[deposit_id] = {"user_id": uid, "operation": operation}
-        save_json(PENDING_FILE, pending)
-        orders.append({
-            "id": str(uuid.uuid4()),
-            "type": "deposit",
-            "deposit_id": deposit_id,
-            "user_id": uid,
-            "username": users.get(uid,{}).get("username",""),
-            "account_id": users.get(uid,{}).get("account_id",""),
-            "operation": operation,
-            "status": "معلق"
-        })
-        save_json(ORDERS_FILE, orders)
-        bal_user = balance.get(uid, 0)
-        kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("✅ قبول الإيداع", callback_data=f"deposit_accept_{deposit_id}"),
-            InlineKeyboardButton("❌ رفض الإيداع", callback_data=f"deposit_reject_{deposit_id}")
-        ]])
+    # تعامل الأدمن مع الإيداع
+    if str(uid) == str(ADMIN_ID) and context.user_data.get("awaiting_deposit"):
+        deposit_id = context.user_data.pop("awaiting_deposit")
         try:
-            await context.bot.send_message(chat_id=ADMIN_ID,
-                text=(f"📥 طلب إيداع جديد\n"
-                      f"المستخدم: @{users.get(uid,{}).get('username','')}\n"
-                      f"Telegram ID: {uid}\n"
-                      f"رقم العملية: {operation}\n"
-                      f"رصيد الزبون الحالي: {bal_user} ل.س"),
-                reply_markup=kb)
-        except Exception:
+            amount = int(text.replace(",", "").strip())
+        except:
+            context.user_data["awaiting_deposit"] = deposit_id
+            await update.message.reply_text("❌ ادخل مبلغ صحيح بالأرقام فقط.")
+            return
+        dep = pending.get(deposit_id)
+        if not dep:
+            await update.message.reply_text("❌ لم أجد عملية الإيداع أو انتهت صلاحيتها.")
+            return
+        user_id = dep["user_id"]
+        balance[user_id] = balance.get(user_id,0)+amount
+        save_json(BALANCE_FILE, balance)
+        for ord_ in orders:
+            if ord_.get("type")=="deposit" and ord_.get("deposit_id")==deposit_id:
+                ord_["status"]="مقبول"
+        save_json(ORDERS_FILE, orders)
+        try:
+            await context.bot.send_message(chat_id=int(user_id), text=f"✅ تم قبول الإيداع وإضافة {amount} ل.س إلى رصيدك.")
+        except:
             pass
-        context.user_data["expecting_deposit"] = False
-        await update.message.reply_text("✅ تم إرسال رقم العملية للأدمن للمراجعة. شكرًا.")
+        if deposit_id in pending:
+            del pending[deposit_id]
+            save_json(PENDING_FILE, pending)
+        await update.message.reply_text(f"✅ Added {amount} ل.س to user {user_id}.")
         return
 
+    # تعاملات أخرى (يمكن إضافة وظائف أخرى لاحقاً)
     await update.message.reply_text(text)
-
+    # =============================
+# CallbackQueryHandler
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data or ""
     uid = str(query.from_user.id)
-    chat_id = query.message.chat_id
+    chat_id = query.message.chat.id
     message_id = query.message.message_id
 
-    if data == "back_main":
+    # العودة للقائمة الرئيسية
+    if data=="back_main":
         await query.message.edit_text("القائمة الرئيسية:", reply_markup=build_main_keyboard(for_uid=uid))
         return
 
-    if data == "show_goods":
+    # عرض السلع
+    if data=="show_goods":
         try:
             img = random_loading_image()
             await context.bot.send_photo(chat_id=chat_id, photo=img, caption="جاري التحميل...")
@@ -305,17 +205,20 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("اختر السلعة:", reply_markup=build_goods_keyboard())
         return
 
-    if data == "check_balance":
+    # التحقق من الرصيد
+    if data=="check_balance":
         bal = balance.get(uid, 0)
         await query.message.reply_text(f"💳 رصيدك الحالي: {bal} ل.س")
         return
 
-    if data == "deposit":
+    # الإيداع
+    if data=="deposit":
         context.user_data["expecting_deposit"] = True
-        await query.message.reply_text(f"📥 للإيداع: حول المبلغ إلى {DEPOSIT_NUMBER} ثم أرسل رقم العملية هنا.")
+        await query.message.reply_text(f"📥 للإيداع: حول المبلغ إلى 97675410 ثم أرسل رقم العملية هنا.")
         return
 
-    if data == "game_rps":
+    # لعبة RPS
+    if data=="game_rps":
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("✊ حجر", callback_data="rps_rock")],
             [InlineKeyboardButton("🖐️ ورق", callback_data="rps_paper")],
@@ -330,6 +233,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("اختر: حجر، ورق أو مقص", reply_markup=kb)
         return
 
+    # اختيار حجر/ورق/مقص
     if data.startswith("rps_"):
         choice = data.split("_",1)[1]
         options = ["rock","paper","scissors"]
@@ -346,6 +250,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(f"أنت: {map_show[choice]}\nالبوت: {map_show[bot_choice]}\n\nالنتيجة: {res}")
         return
 
+    # شراء سلعة
     if data.startswith("buy_"):
         item_id = int(data.split("_",1)[1])
         item = next((i for i in goods if i["id"] == item_id), None)
@@ -395,180 +300,35 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except:
             pass
         return
-
-    if data.startswith("showid_"):
-        order_id = data.split("_",1)[1]
-        order = next((o for o in orders if o["id"] == order_id), None)
-        if not order:
-            await query.message.reply_text("❌ لم يتم العثور على الطلب.")
-            return
-        await query.message.reply_text(f"ID الحساب للمستخدم @{order['username']}: {order.get('account_id','')}")
-        return
-
-    if data.startswith("approve_") or data.startswith("reject_"):
-        action, order_id = data.split("_",1)
-        order = next((o for o in orders if o["id"] == order_id), None)
-        if not order:
-            await query.message.reply_text("❌ لم يتم العثور على الطلب.")
-            return
-        if order["status"] != "معلق":
-            await query.message.reply_text(f"⚠️ الطلب تم التعامل معه مسبقًا ({order['status']}).")
-            return
-
-        if action == "approve":
-            if order.get("type") == "purchase":
-                user_id = order["user_id"]
-                price = int(order.get("price",0))
-                user_bal = balance.get(user_id, 0)
-                if user_bal < price:
-                    await query.message.reply_text("⚠️ رصيد المستخدم غير كافٍ لخصم السعر. يمكنك إضافة الرصيد يدوياً ثم إعادة المحاولة.")
-                    return
-                balance[user_id] = user_bal - price
-                order["status"] = "مقبول"
-                save_json(BALANCE_FILE, balance)
-                save_json(ORDERS_FILE, orders)
-                try:
-                    await context.bot.send_message(chat_id=int(user_id), text=f"✅ تم قبول طلبك ({order['item']}) وتم خصم {price} ل.س من رصيدك. رصيدك الآن: {balance[user_id]} ل.س")
-                except:
-                    pass
-                disable_message_buttons(context, ADMIN_ID, message_id)
-                await query.message.reply_text(f"✅ تم قبول الطلب: {order['item']}")
-            else:
-                order["status"] = "مقبول"
-                save_json(ORDERS_FILE, orders)
-                disable_message_buttons(context, ADMIN_ID, message_id)
-                await query.message.reply_text("✅ تم قبول الطلب.")
-            return
-
-        elif action == "reject":
-            order["status"] = "مرفوض"
-            save_json(ORDERS_FILE, orders)
-            try:
-                await context.bot.send_message(chat_id=int(order["user_id"]), text=f"❌ تم رفض طلبك ({order.get('item','')}).")
-            except:
-                pass
-            disable_message_buttons(context, ADMIN_ID, message_id)
-            await query.message.reply_text(f"❌ تم رفض الطلب: {order.get('item','')}")
-            return
-
-    if data.startswith("deposit_accept_") or data.startswith("deposit_reject_"):
-        parts = data.split("_",2)
-        if len(parts) < 3:
-            await query.message.reply_text("❌ بيانات غير صحيحة.")
-            return
-        kind = parts[0] + "_" + parts[1]
-        deposit_id = parts[2]
-        dep = pending.get(deposit_id)
-        if not dep:
-            await query.message.reply_text("❌ لم يتم العثور على عملية الإيداع.")
-            return
-        if kind == "deposit_accept":
-            context.user_data["awaiting_deposit"] = deposit_id
-            await query.message.reply_text(f"💰 ادخل المبلغ الذي تريد إضافته لرقم العملية {dep['operation']} (لمستخدم {dep['user_id']})")
-            disable_message_buttons(context, ADMIN_ID, message_id)
-            return
-        elif kind == "deposit_reject":
-            for ord_ in orders:
-                if ord_.get("type") == "deposit" and ord_.get("deposit_id") == deposit_id:
-                    ord_["status"] = "مرفوض"
-            save_json(ORDERS_FILE, orders)
-            try:
-                await context.bot.send_message(chat_id=int(dep['user_id']), text="❌ تم رفض عملية الإيداع من الأدمن.")
-            except:
-                pass
-            if deposit_id in pending:
-                del pending[deposit_id]
-                save_json(PENDING_FILE, pending)
-            disable_message_buttons(context, ADMIN_ID, message_id)
-            await query.message.reply_text("❌ تم رفض عملية الإيداع.")
-            return
-
-    if data == "admin_panel":
-        if uid != str(ADMIN_ID):
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
-            return
-        await query.message.reply_text("⚙️ لوحة الأدمن:", reply_markup=build_admin_keyboard())
-        return
-
-    if data == "admin_show_goods":
-        if uid != str(ADMIN_ID):
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
-            return
-        await query.message.reply_text("قائمة السلع (عرض خاص بالأدمن):", reply_markup=build_goods_keyboard())
-        return
-
-    if data == "admin_show_users":
-        if uid != str(ADMIN_ID):
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
-            return
-        if not users:
-            await query.message.reply_text("لا يوجد مستخدمين مسجلين حالياً.")
-            return
-        for user_id, info in users.items():
-            username = info.get("username", "غير معروف")
-            account_id = info.get("account_id", "غير مسجل")
-            reg_at = info.get("registered_at", "غير معروف")
-            try:
-                dt = datetime.datetime.fromisoformat(reg_at)
-                reg_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-            except:
-                reg_str = reg_at
-            text = (f"👤 المستخدم: @{username}\n"
-                    f"🆔 ID الحساب: {account_id}\n"
-                    f"💬 رابط التليجرام: https://t.me/{username}\n"
-                    f"⏰ تاريخ/وقت التسجيل (UTC): {reg_str}")
-            kb = InlineKeyboardMarkup([
-                [InlineKeyboardButton("🗑️ حذف المستخدم", callback_data=f"delete_user_{user_id}")],
-            ])
-            await query.message.reply_text(text, reply_markup=kb)
-        return
-
-    if data.startswith("delete_user_"):
-        if uid != str(ADMIN_ID):
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
-            return
-        del_user_id = data.split("delete_user_")[1]
-        if del_user_id in users:
-            del users[del_user_id]
-            save_json(USERS_FILE, users)
-            await query.message.reply_text(f"✅ تم حذف المستخدم {del_user_id}")
+        # =============================
+# التعامل مع طلبات الأدمن والإيداع
+async def disable_message_buttons(context, chat_id, message_id, text=None):
+    try:
+        if text:
+            await context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=text)
         else:
-            await query.message.reply_text("❌ المستخدم غير موجود.")
-        return
+            await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
+    except Exception as e:
+        print("disable_message_buttons error:", e)
 
-    if data == "admin_edit_price":
-        if uid != str(ADMIN_ID):
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
-            return
-        items_text = "\n".join([f"{it['id']}. {it['name']} - {it['price']} ل.س" for it in goods])
-        context.user_data["expecting_price_item"] = True
-        await query.message.reply_text(f"📋 قائمة السلع:\n{items_text}\n\n📥 أرسل رقم السلعة التي تريد تعديل سعرها:")
-        return
-
-    if data == "admin_time":
-        if uid != str(ADMIN_ID):
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
-            return
-        now = datetime.datetime.utcnow()
-        time_str = now.strftime("%Y-%m-%d %H:%M:%S UTC")
-        await query.message.reply_text(f"🕒 التاريخ والوقت الحالي:\n{time_str}")
-        return
-
+# =============================
+# Error handler
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Update {update} caused error {context.error}")
 
+# =============================
+# تشغيل البوت
 def main():
-    keep_alive_threads()
-    
     app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
-    
+
     app_bot.add_handler(CommandHandler("start", start))
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
     app_bot.add_handler(CallbackQueryHandler(callback_handler))
     app_bot.add_error_handler(error_handler)
-    
+
     print("🤖 البوت شغال الآن...")
     app_bot.run_polling(allowed_updates=Update.ALL_TYPES)
 
+# =============================
 if __name__ == "__main__":
     main()
