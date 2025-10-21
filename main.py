@@ -3,8 +3,8 @@ import sys
 import json
 import uuid
 import datetime
-from typing import Dict
 import random
+from typing import Dict
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -61,8 +61,7 @@ goods = load_json(GOODS_FILE, [
 users: Dict[str, Dict] = load_json(USERS_FILE, {})
 orders = load_json(ORDERS_FILE, [])
 balance = load_json(BALANCE_FILE, {})
-pending = load_json(PENDING_FILE, {})
-def build_main_keyboard(for_uid=None):
+pending = load_json(PENDING_FILE, {})def build_main_keyboard(for_uid=None):
     kb = []
     kb.append([InlineKeyboardButton("🛍️ عرض السلع", callback_data="show_goods")])
     kb.append([InlineKeyboardButton("📥 إيداع", callback_data="deposit")])
@@ -115,10 +114,11 @@ async def send_welcome_image(context, chat_id, caption, reply_markup):
             text=caption,
             reply_markup=reply_markup,
             parse_mode="Markdown"
-)async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        )
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     context.user_data["expecting_account_id"] = True
-
     caption_text = "🎮 أهلاً بك في البوت! اضغط على أي زر للبدء 🔥\n\nأرسل **ID حساب اللعبة** الآن (يجب أن يكون **10 أرقام**) — سيُطلب في كل مرة."  
     await send_welcome_image(context, update.effective_chat.id, caption_text, build_main_keyboard(for_uid=uid))
 
@@ -132,26 +132,25 @@ async def disable_message_buttons(context, chat_id, message_id, text=None):
         else:
             await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
     except Exception as e:
-        print("disable_message_buttons error:", e)
-
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        print("disable_message_buttons error:", e)async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     text = update.message.text.strip()
 
     # معالجة الرسائل للأدمن (بث الرسائل)
-    if str(uid) == str(ADMIN_ID) and context.user_data.get("awaiting_broadcast"):  
-        context.user_data.pop("awaiting_broadcast")  
-        sent_count = 0  
-        failed_count = 0  
-        for user_id in users.keys():  
-            try:  
-                await context.bot.send_message(chat_id=int(user_id), text=text)  
-                sent_count += 1  
-            except:  
-                failed_count += 1  
-        await update.message.reply_text(f"✅ تم إرسال الرسالة إلى {sent_count} مستخدم.\n❌ فشل الإرسال لـ {failed_count} مستخدم.")  
+    if str(uid) == str(ADMIN_ID) and context.user_data.get("awaiting_broadcast"):
+        context.user_data.pop("awaiting_broadcast")
+        sent_count = 0
+        failed_count = 0
+        for user_id in users.keys():
+            try:
+                await context.bot.send_message(chat_id=int(user_id), text=text)
+                sent_count += 1
+            except:
+                failed_count += 1
+        await update.message.reply_text(f"✅ تم إرسال الرسالة إلى {sent_count} مستخدم.\n❌ فشل الإرسال لـ {failed_count} مستخدم.")
         return
-        async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data or ""
@@ -159,301 +158,282 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = query.message.chat_id
     message_id = query.message.message_id
 
-    if data == "back_main":  
-        try:  
-            await query.message.delete()  
-        except:  
-            pass  
-        await send_welcome_image(context, chat_id, "🎮 القائمة الرئيسية:", build_main_keyboard(for_uid=uid))  
-        return  
-
-    if data == "show_goods":  
-        caption_text = "🛍️ اختر السلعة التي تريدها:"  
-        try:  
-            await query.message.delete()  
-        except:  
-            pass  
-        await send_welcome_image(context, chat_id, caption_text, build_goods_keyboard())  
-        return  
-
-    if data == "check_balance":  
-        bal = balance.get(uid, 0)  
-        await query.message.reply_text(f"💳 رصيدك الحالي: {bal} ل.س")  
-        return  
-
-    if data == "deposit":  
-        context.user_data["expecting_deposit"] = True  
-        await query.message.reply_text(f"📥 للإيداع: حول المبلغ إلى {DEPOSIT_NUMBER} ثم أرسل رقم العملية هنا.")  
+    if data == "back_main":
+        try:
+            await query.message.delete()
+        except:
+            pass
+        await send_welcome_image(context, chat_id, "🎮 القائمة الرئيسية:", build_main_keyboard(for_uid=uid))
         return
 
-    if data == "game_rps":  
-        kb = InlineKeyboardMarkup([  
-            [InlineKeyboardButton("✊ حجر", callback_data="rps_rock")],  
-            [InlineKeyboardButton("🖐️ ورق", callback_data="rps_paper")],  
-            [InlineKeyboardButton("✌️ مقص", callback_data="rps_scissors")],  
-            [InlineKeyboardButton("◀️ رجوع", callback_data="back_main")]  
-        ])  
-        await query.message.reply_text("اختر: حجر، ورق أو مقص", reply_markup=kb)  
+    if data == "show_goods":
+        caption_text = "🛍️ اختر السلعة التي تريدها:"
+        try:
+            await query.message.delete()
+        except:
+            pass
+        await send_welcome_image(context, chat_id, caption_text, build_goods_keyboard())
         return
 
-    if data.startswith("rps_"):  
-        choice = data.split("_",1)[1]  
-        options = ["rock","paper","scissors"]  
-        bot_choice = random.choice(options)  
-        map_show = {"rock":"✊ حجر","paper":"🖐️ ورق","scissors":"✌️ مقص"}  
-        if bot_choice == choice:  
-            res = "تعادل 🤝"  
-        elif (choice == "rock" and bot_choice == "scissors") or \  
-             (choice == "paper" and bot_choice == "rock") or \  
-             (choice == "scissors" and bot_choice == "paper"):  
-            res = "فزت 🎉"  
-        else:  
-            res = "خسرت 😞"  
-        await query.message.reply_text(f"أنت: {map_show[choice]}\nالبوت: {map_show[bot_choice]}\n\nالنتيجة: {res}")  
+    if data == "check_balance":
+        bal = balance.get(uid, 0)
+        await query.message.reply_text(f"💳 رصيدك الحالي: {bal} ل.س")
         return
-        if data.startswith("buy_"):  
-        item_id = int(data.split("_",1)[1])  
-        item = next((i for i in goods if i["id"] == item_id), None)  
-        if not item:  
-            await query.message.reply_text("❌ خطأ: السلعة غير موجودة.")  
-            return  
-        if uid not in users or not users.get(uid,{}).get("account_id"):  
-            await query.message.reply_text("❌ يرجى أولاً إرسال ID حسابك عبر /start ثم إعادة اختيار السلعة.")  
-            return  
 
-        text_caption = f"📦 تم اختيار: {item['name']}\nالسعر: {item['price']} ل.س\n\n⏳ سيتم إرسال الطلب للأدمن للمراجعة."  
-        try:  
-            if item.get("image"):  
-                await context.bot.send_photo(chat_id=int(uid), photo=item.get("image"), caption=text_caption)  
-            else:  
-                await query.message.reply_text(text_caption)  
-        except:  
-            await query.message.reply_text(text_caption)  
-
-        order_id = str(uuid.uuid4())  
-        orders.append({  
-            "id": order_id,  
-            "type": "purchase",  
-            "user_id": uid,  
-            "username": users.get(uid,{}).get("username",""),  
-            "account_id": users.get(uid,{}).get("account_id",""),  
-            "item": item["name"],  
-            "price": item["price"],  
-            "status": "معلق"  
-        })  
-        save_json(ORDERS_FILE, orders)  
-
-        bal_user = balance.get(uid, 0)  
-        kb_admin = InlineKeyboardMarkup([[  
-            InlineKeyboardButton("ID الحساب", callback_data=f"showid_{order_id}"),  
-            InlineKeyboardButton("✅ قبول", callback_data=f"approve_{order_id}"),  
-            InlineKeyboardButton("❌ رفض", callback_data=f"reject_{order_id}")  
-        ]])  
-        try:  
-            await context.bot.send_message(chat_id=ADMIN_ID,  
-                text=(f"📥 طلب شحن جديد\n"  
-                      f"المستخدم: @{users.get(uid,{}).get('username','')}\n"  
-                      f"Telegram ID: {uid}\n"  
-                      f"السلعة: {item['name']}\n"  
-                      f"السعر: {item['price']} ل.س\n"  
-                      f"رصيد الزبون الحالي: {bal_user} ل.س"),  
-                reply_markup=kb_admin)  
-        except:  
-            pass  
-        return  
-
-    if data.startswith("showid_"):  
-        order_id = data.split("_",1)[1]  
-        order = next((o for o in orders if o["id"] == order_id), None)  
-        if not order:  
-            await query.message.reply_text("❌ لم يتم العثور على الطلب.")  
-            return  
-        await query.message.reply_text(f"ID الحساب للمستخدم @{order['username']}: {order.get('account_id','')}")  
+    if data == "deposit":
+        context.user_data["expecting_deposit"] = True
+        await query.message.reply_text(f"📥 للإيداع: حول المبلغ إلى {DEPOSIT_NUMBER} ثم أرسل رقم العملية هنا.")
         return
-        if data.startswith("approve_") or data.startswith("reject_"):  
-        action, order_id = data.split("_",1)  
-        order = next((o for o in orders if o["id"] == order_id), None)  
-        if not order:  
-            await query.message.reply_text("❌ لم يتم العثور على الطلب.")  
-            return  
-        if order["status"] != "معلق":  
-            await query.message.reply_text(f"⚠️ الطلب تم التعامل معه مسبقًا ({order['status']}).")  
-            return  
 
-        if action == "approve":  
-            if order.get("type") == "purchase":  
-                user_id = order["user_id"]  
-                price = int(order.get("price",0))  
-                user_bal = balance.get(user_id, 0)  
-                if user_bal < price:  
-                    await query.message.reply_text("⚠️ رصيد المستخدم غير كافٍ لخصم السعر. يمكنك إضافة الرصيد يدوياً ثم إعادة المحاولة.")  
-                    return  
-                balance[user_id] = user_bal - price  
-                order["status"] = "مقبول"  
-                save_json(BALANCE_FILE, balance)  
-                save_json(ORDERS_FILE, orders)  
-                try:  
-                    await context.bot.send_message(chat_id=int(user_id), text=f"✅ تم قبول طلبك ({order['item']}) وتم خصم {price} ل.س من رصيدك. رصيدك الآن: {balance[user_id]} ل.س")  
-                except:  
-                    pass  
-                await disable_message_buttons(context, ADMIN_ID, message_id)  
-                await query.message.reply_text(f"✅ تم قبول الطلب: {order['item']}")  
-            else:  
-                order["status"] = "مقبول"  
-                save_json(ORDERS_FILE, orders)  
-                await disable_message_buttons(context, ADMIN_ID, message_id)  
-                await query.message.reply_text("✅ تم قبول الطلب.")  
-            return  
+    if data == "game_rps":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✊ حجر", callback_data="rps_rock")],
+            [InlineKeyboardButton("🖐️ ورق", callback_data="rps_paper")],
+            [InlineKeyboardButton("✌️ مقص", callback_data="rps_scissors")],
+            [InlineKeyboardButton("◀️ رجوع", callback_data="back_main")]
+        ])
+        await query.message.reply_text("اختر: حجر، ورق أو مقص", reply_markup=kb)
+        return
 
-        elif action == "reject":  
-            order["status"] = "مرفوض"  
-            save_json(ORDERS_FILE, orders)  
-            try:  
-                await context.bot.send_message(chat_id=int(order["user_id"]), text=f"❌ تم رفض طلبك ({order.get('item','')}).")  
-            except:  
-                pass  
-            await disable_message_buttons(context, ADMIN_ID, message_id)  
-            await query.message.reply_text(f"❌ تم رفض الطلب: {order.get('item','')}")  
-            return  
-
-    if data.startswith("deposit_accept_") or data.startswith("deposit_reject_"):  
-        parts = data.split("_",2)  
-        if len(parts) < 3:  
-            await query.message.reply_text("❌ بيانات غير صحيحة.")  
-            return  
-        kind = parts[0] + "_" + parts[1]  
-        deposit_id = parts[2]  
-        dep = pending.get(deposit_id)  
-        if not dep:  
-            await query.message.reply_text("❌ لم يتم العثور على عملية الإيداع.")  
-            return  
-        if kind == "deposit_accept":  
-            context.user_data["awaiting_deposit"] = deposit_id  
-            await query.message.reply_text(f"💰 ادخل المبلغ الذي تريد إضافته لرقم العملية {dep['operation']} (لمستخدم {dep['user_id']})")  
-            await disable_message_buttons(context, ADMIN_ID, message_id)  
-            return  
-        elif kind == "deposit_reject":  
-            for ord_ in orders:  
-                if ord_.get("type") == "deposit" and ord_.get("deposit_id") == deposit_id:  
-                    ord_["status"] = "مرفوض"  
-            save_json(ORDERS_FILE, orders)  
-            try:  
-                await context.bot.send_message(chat_id=int(dep['user_id']), text="❌ تم رفض عملية الإيداع من الأدمن.")  
-            except:  
-                pass  
-            if deposit_id in pending:  
-                del pending[deposit_id]  
-                save_json(PENDING_FILE, pending)  
-            await disable_message_buttons(context, ADMIN_ID, message_id)  
-            await query.message.reply_text("❌ تم رفض عملية الإيداع.")  
+    if data.startswith("rps_"):
+        choice = data.split("_",1)[1]
+        options = ["rock","paper","scissors"]
+        bot_choice = random.choice(options)
+        map_show = {"rock":"✊ حجر","paper":"🖐️ ورق","scissors":"✌️ مقص"}
+        if bot_choice == choice:
+            res = "تعادل 🤝"
+        elif (choice == "rock" and bot_choice == "scissors") or \
+             (choice == "paper" and bot_choice == "rock") or \
+             (choice == "scissors" and bot_choice == "paper"):
+            res = "فزت 🎉"
+        else:
+            res = "خسرت 😞"
+        await query.message.reply_text(f"أنت: {map_show[choice]}\nالبوت: {map_show[bot_choice]}\n\nالنتيجة: {res}")
+        returnif data.startswith("buy_"):
+        item_id = int(data.split("_",1)[1])
+        item = next((i for i in goods if i["id"] == item_id), None)
+        if not item:
+            await query.message.reply_text("❌ خطأ: السلعة غير موجودة.")
             return
-            if data == "admin_panel":  
-        if uid != str(ADMIN_ID):  
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")  
-            return  
-        await query.message.reply_text("⚙️ لوحة الأدمن:", reply_markup=build_admin_keyboard())  
-        return  
+        if uid not in users or not users.get(uid, {}).get("account_id"):
+            await query.message.reply_text("❌ يرجى أولاً إرسال ID حسابك عبر /start ثم إعادة اختيار السلعة.")
+            return
 
-    if data == "admin_show_goods":  
-        if uid != str(ADMIN_ID):  
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")  
-            return  
-        await query.message.reply_text("قائمة السلع (عرض خاص بالأدمن):", reply_markup=build_goods_keyboard())  
-        return  
+        text_caption = f"📦 تم اختيار: {item['name']}\nالسعر: {item['price']} ل.س\n\n⏳ سيتم إرسال الطلب للأدمن للمراجعة."
+        try:
+            if item.get("image"):
+                await context.bot.send_photo(chat_id=int(uid), photo=item.get("image"), caption=text_caption)
+            else:
+                await query.message.reply_text(text_caption)
+        except:
+            await query.message.reply_text(text_caption)
 
-    if data == "admin_broadcast":  
-        if uid != str(ADMIN_ID):  
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")  
-            return  
-        context.user_data["awaiting_broadcast"] = True  
-        await query.message.reply_text("📢 اكتب الرسالة التي تريد إرسالها لجميع المستخدمين:")  
-        return  
+        order_id = str(uuid.uuid4())
+        orders.append({
+            "id": order_id,
+            "type": "purchase",
+            "user_id": uid,
+            "username": users.get(uid, {}).get("username",""),
+            "account_id": users.get(uid, {}).get("account_id",""),
+            "item": item["name"],
+            "price": item["price"],
+            "status": "معلق"
+        })
+        save_json(ORDERS_FILE, orders)
 
-    if data == "admin_show_users":  
-        if uid != str(ADMIN_ID):  
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")  
-            return  
-        if not users:  
-            await query.message.reply_text("لا يوجد مستخدمين مسجلين حالياً.")  
-            return  
-        for user_id, info in users.items():  
-            username = info.get("username", "غير معروف")  
-            account_id = info.get("account_id", "غير مسجل")  
-            reg_at = info.get("registered_at", "غير معروف")  
-            try:  
-                dt = datetime.datetime.fromisoformat(reg_at)  
-                reg_str = dt.strftime("%Y-%m-%d %H:%M:%S")  
-            except:  
-                reg_str = reg_at  
-            text = (f"👤 المستخدم: @{username}\n"  
-                    f"🆔 ID الحساب: {account_id}\n"  
-                    f"💬 رابط التليجرام: https://t.me/{username}\n"  
-                    f"⏰ تاريخ/وقت التسجيل (UTC): {reg_str}")  
-            kb = InlineKeyboardMarkup([  
-                [InlineKeyboardButton("🗑️ حذف المستخدم", callback_data=f"delete_user_{user_id}")],  
-            ])  
-            await query.message.reply_text(text, reply_markup=kb)  
-        return  
-
-    if data.startswith("delete_user_"):  
-        if uid != str(ADMIN_ID):  
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")  
-            return  
-        del_user_id = data.split("delete_user_")[1]  
-        if del_user_id in users:  
-            del users[del_user_id]  
-            save_json(USERS_FILE, users)  
-            await query.message.reply_text(f"✅ تم حذف المستخدم {del_user_id}")  
-        else:  
-            await query.message.reply_text("❌ المستخدم غير موجود.")  
-        return  
-
-    if data == "admin_edit_price":  
-        if uid != str(ADMIN_ID):  
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")  
-            return  
-        items_text = "\n".join([f"{it['id']}. {it['name']} - {it['price']} ل.س" for it in goods])  
-        context.user_data["expecting_price_item"] = True  
-        await query.message.reply_text(f"📋 قائمة السلع:\n{items_text}\n\n📥 أرسل رقم السلعة التي تريد تعديل سعرها:")  
-        return  
-
-    if data == "admin_time":  
-        if uid != str(ADMIN_ID):  
-            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")  
-            return  
-        now = datetime.datetime.utcnow()  
-        time_str = now.strftime("%Y-%m-%d %H:%M:%S UTC")  
-        await query.message.reply_text(f"🕒 التاريخ والوقت الحالي:\n{time_str}")  
+        bal_user = balance.get(uid, 0)
+        kb_admin = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("ID الحساب", callback_data=f"showid_{order_id}"),
+                InlineKeyboardButton("✅ قبول", callback_data=f"approve_{order_id}"),
+                InlineKeyboardButton("❌ رفض", callback_data=f"reject_{order_id}")
+            ]
+        ])
+        try:
+            await context.bot.send_message(chat_id=ADMIN_ID,
+                text=(f"📥 طلب شحن جديد\n"
+                      f"المستخدم: @{users.get(uid, {}).get('username','')}\n"
+                      f"Telegram ID: {uid}\n"
+                      f"السلعة: {item['name']}\n"
+                      f"السعر: {item['price']} ل.س\n"
+                      f"رصيد الزبون الحالي: {bal_user} ل.س"),
+                reply_markup=kb_admin)
+        except:
+            pass
         return
-        async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if data.startswith("showid_"):
+        order_id = data.split("_",1)[1]
+        order = next((o for o in orders if o["id"] == order_id), None)
+        if not order:
+            await query.message.reply_text("❌ لم يتم العثور على الطلب.")
+            return
+        await query.message.reply_text(f"ID الحساب للمستخدم @{order['username']}: {order.get('account_id','')}")
+        return
+
+    if data.startswith("approve_") or data.startswith("reject_"):
+        action, order_id = data.split("_",1)
+        order = next((o for o in orders if o["id"] == order_id), None)
+        if not order:
+            await query.message.reply_text("❌ لم يتم العثور على الطلب.")
+            return
+        if order["status"] != "معلق":
+            await query.message.reply_text(f"⚠️ الطلب تم التعامل معه مسبقًا ({order['status']}).")
+            return
+
+        if action == "approve":
+            if order.get("type") == "purchase":
+                user_id = order["user_id"]
+                price = int(order.get("price",0))
+                user_bal = balance.get(user_id, 0)
+                if user_bal < price:
+                    await query.message.reply_text("⚠️ رصيد المستخدم غير كافٍ لخصم السعر. يمكنك إضافة الرصيد يدوياً ثم إعادة المحاولة.")
+                    return
+                balance[user_id] = user_bal - price
+                order["status"] = "مقبول"
+                save_json(BALANCE_FILE, balance)
+                save_json(ORDERS_FILE, orders)
+                try:
+                    await context.bot.send_message(chat_id=int(user_id), text=f"✅ تم قبول طلبك ({order['item']}) وتم خصم {price} ل.س من رصيدك. رصيدك الآن: {balance[user_id]} ل.س")
+                except:
+                    pass
+                await disable_message_buttons(context, ADMIN_ID, message_id)
+                await query.message.reply_text(f"✅ تم قبول الطلب: {order['item']}")
+            else:
+                order["status"] = "مقبول"
+                save_json(ORDERS_FILE, orders)
+                await disable_message_buttons(context, ADMIN_ID, message_id)
+                await query.message.reply_text("✅ تم قبول الطلب.")
+            return
+
+        elif action == "reject":
+            order["status"] = "مرفوض"
+            save_json(ORDERS_FILE, orders)
+            try:
+                await context.bot.send_message(chat_id=int(order["user_id"]), text=f"❌ تم رفض طلبك ({order.get('item','')}).")
+            except:
+                pass
+            await disable_message_buttons(context, ADMIN_ID, message_id)
+            await query.message.reply_text(f"❌ تم رفض الطلب: {order.get('item','')}")
+            returnif data.startswith("deposit_accept_") or data.startswith("deposit_reject_"):
+        parts = data.split("_", 2)
+        if len(parts) < 3:
+            await query.message.reply_text("❌ بيانات غير صحيحة.")
+            return
+        kind = parts[0] + "_" + parts[1]
+        deposit_id = parts[2]
+        dep = pending.get(deposit_id)
+        if not dep:
+            await query.message.reply_text("❌ لم يتم العثور على عملية الإيداع.")
+            return
+        if kind == "deposit_accept":
+            context.user_data["awaiting_deposit"] = deposit_id
+            await query.message.reply_text(f"💰 ادخل المبلغ الذي تريد إضافته لرقم العملية {dep['operation']} (لمستخدم {dep['user_id']})")
+            await disable_message_buttons(context, ADMIN_ID, message_id)
+            return
+        elif kind == "deposit_reject":
+            for ord_ in orders:
+                if ord_.get("type") == "deposit" and ord_.get("deposit_id") == deposit_id:
+                    ord_["status"] = "مرفوض"
+            save_json(ORDERS_FILE, orders)
+            try:
+                await context.bot.send_message(chat_id=int(dep['user_id']), text="❌ تم رفض عملية الإيداع من الأدمن.")
+            except:
+                pass
+            if deposit_id in pending:
+                del pending[deposit_id]
+                save_json(PENDING_FILE, pending)
+            await disable_message_buttons(context, ADMIN_ID, message_id)
+            await query.message.reply_text("❌ تم رفض عملية الإيداع.")
+            return
+
+    if data == "admin_panel":
+        if uid != str(ADMIN_ID):
+            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
+            return
+        await query.message.reply_text("⚙️ لوحة الأدمن:", reply_markup=build_admin_keyboard())
+        return
+
+    if data == "admin_show_goods":
+        if uid != str(ADMIN_ID):
+            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
+            return
+        await query.message.reply_text("قائمة السلع (عرض خاص بالأدمن):", reply_markup=build_goods_keyboard())
+        return
+
+    if data == "admin_broadcast":
+        if uid != str(ADMIN_ID):
+            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
+            return
+        context.user_data["awaiting_broadcast"] = True
+        await query.message.reply_text("📢 اكتب الرسالة التي تريد إرسالها لجميع المستخدمين:")
+        return
+
+    if data == "admin_show_users":
+        if uid != str(ADMIN_ID):
+            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
+            return
+        if not users:
+            await query.message.reply_text("لا يوجد مستخدمين مسجلين حالياً.")
+            return
+        for user_id, info in users.items():
+            username = info.get("username", "غير معروف")
+            account_id = info.get("account_id", "غير مسجل")
+            reg_at = info.get("registered_at", "غير معروف")
+            try:
+                dt = datetime.datetime.fromisoformat(reg_at)
+                reg_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+            except:
+                reg_str = reg_at
+            text = (f"👤 المستخدم: @{username}\n"
+                    f"🆔 ID الحساب: {account_id}\n"
+                    f"💬 رابط التليجرام: https://t.me/{username}\n"
+                    f"⏰ تاريخ/وقت التسجيل (UTC): {reg_str}")
+            kb = InlineKeyboardMarkup([
+                [InlineKeyboardButton("🗑️ حذف المستخدم", callback_data=f"delete_user_{user_id}")],
+            ])
+            await query.message.reply_text(text, reply_markup=kb)
+        return
+
+    if data.startswith("delete_user_"):
+        if uid != str(ADMIN_ID):
+            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
+            return
+        del_user_id = data.split("delete_user_")[1]
+        if del_user_id in users:
+            del users[del_user_id]
+            save_json(USERS_FILE, users)
+            await query.message.reply_text(f"✅ تم حذف المستخدم {del_user_id}")
+        else:
+            await query.message.reply_text("❌ المستخدم غير موجود.")
+        return
+
+    if data == "admin_edit_price":
+        if uid != str(ADMIN_ID):
+            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
+            return
+        items_text = "\n".join([f"{it['id']}. {it['name']} - {it['price']} ل.س" for it in goods])
+        context.user_data["expecting_price_item"] = True
+        await query.message.reply_text(f"📋 قائمة السلع:\n{items_text}\n\n📥 أرسل رقم السلعة التي تريد تعديل سعرها:")
+        return
+
+    if data == "admin_time":
+        if uid != str(ADMIN_ID):
+            await query.message.reply_text("❌ هذا الخيار متاح فقط للأدمن.")
+            return
+        now = datetime.datetime.utcnow()
+        time_str = now.strftime("%Y-%m-%d %H:%M:%S UTC")
+        await query.message.reply_text(f"🕒 التاريخ والوقت الحالي:\n{time_str}")
+        return
+
+
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Update {update} caused error {context.error}")
 
+
 def main():
-    # Flask server
-    app = Flask(__name__)
-    
-    @app.route("/")
-    def home():
-        return "✅ البوت شغال!"
-
-    PORT = int(os.environ.get("PORT", 5000))
-    threading.Thread(target=lambda: app.run(host="0.0.0.0", port=PORT)).start()
-
-    # تشغيل البوت
-    application = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
-    
-    # إضافة handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
-    application.add_handler(CallbackQueryHandler(callback_handler))
-    application.add_error_handler(error_handler)
-    
-    print("🤖 البوت الأساسي شغال الآن...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-# هنا تستدعي main()
+
 if __name__ == "__main__":
     main()
-
-    # المزيد من المعالجات (الإيداع، تعديل الأسعار، تسجيل الحساب، إلخ)
-    # ... (هنا يبقى نفس كودك مع المحافظة على المسافات البادئة الصحيحة)
