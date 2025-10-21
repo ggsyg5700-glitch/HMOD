@@ -573,3 +573,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+# منع Render من إيقاف الخدمة بسبب عدم وجود منفذ
+import time
+while True:
+    print("🤖 البوت شغال الآن... (Ping لـ Render)")
+    time.sleep(600)
