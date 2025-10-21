@@ -571,12 +571,6 @@ def main():
     print("🤖 البوت الأساسي شغال الآن...")
     app_bot.run_polling(allowed_updates=Update.ALL_TYPES)
 
-# imports
-import os
-from flask import Flask
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
-import threading
-
 # باقي كود البوت (handlers, keyboards, functions)
 
 def main():
