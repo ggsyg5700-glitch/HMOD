@@ -20,8 +20,8 @@ except ImportError:
     print("يرجى تشغيل: pip install python-telegram-bot")
     sys.exit(1)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID") or 0)
+BOT_TOKEN = os.getenv(8323131112:AAF-dhDI8GQgh1MVWoE-7fcceEqj66izhqA)
+ADMIN_ID = int(os.getenv(6365858942) or 0)
 DEPOSIT_NUMBER = os.getenv("DEPOSIT_NUMBER") or "97675410"
 
 if not BOT_TOKEN:
