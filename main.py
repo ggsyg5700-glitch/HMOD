@@ -571,5 +571,29 @@ def main():
     print("🤖 البوت الأساسي شغال الآن...")
     app_bot.run_polling(allowed_updates=Update.ALL_TYPES)
 
+# imports
+import os
+from flask import Flask
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
+import threading
+
+# باقي كود البوت (handlers, keyboards, functions)
+
+def main():
+    # Flask server
+    app = Flask(__name__)
+    @app.route("/")
+    def home():
+        return "✅ البوت شغال!"
+
+    PORT = int(os.environ.get("PORT", 5000))
+    threading.Thread(target=lambda: app.run(host="0.0.0.0", port=PORT)).start()
+
+    # تشغيل البوت
+    application = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
+    # إضافة handlers هنا
+    application.run_polling()
+
+# هنا تستدعي main()
 if __name__ == "__main__":
     main()
