@@ -1,0 +1,200 @@
+[
+  {
+    "id": "c58f6a3c-2379-4558-a3ee-4b895b6203f5",
+    "user_id": "6365858942",
+    "item_name": "شراء: فري فاير 110",
+    "price": 12000.0,
+    "status": "مكتمل",
+    "timestamp": "2026-01-18T14:39:00.454780"
+  },
+  {
+    "id": "3a581a41-af59-4e5e-9880-37d081933fb8",
+    "user_id": "6365858942",
+    "item_name": "شراء: فري فاير 2420",
+    "price": 240000.0,
+    "status": "مكتمل",
+    "timestamp": "2026-01-18T16:06:55.083534"
+  },
+  {
+    "id": "9c6b154e-9553-4acc-90c2-53fbdafdf318",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "فري فاير 2420",
+    "price": 240000.0,
+    "game_id": "5343243228",
+    "status": "مرفوض",
+    "timestamp": "2026-01-18T18:30:10.714054",
+    "timestamp_formatted": "06:30 مساءً 2026-01-18"
+  },
+  {
+    "id": "d97710fb-0758-4ab1-9632-a641eb4cf828",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "ببجي 1800",
+    "price": 280000.0,
+    "game_id": "754564355r",
+    "status": "مكتمل",
+    "timestamp": "2026-01-28T19:12:51.868603",
+    "timestamp_formatted": "07:12 مساءً 2026-01-28"
+  },
+  {
+    "id": "13ff1127-35d7-4dd6-a452-63eeb6fe2307",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "ببجي 320",
+    "price": 60000.0,
+    "game_id": "726335667474646464644",
+    "status": "مكتمل",
+    "timestamp": "2026-02-02T18:22:10.629039",
+    "timestamp_formatted": "06:22 مساءً 2026-02-02"
+  },
+  {
+    "id": "8041f995-dc8a-455b-b755-c5b4fa7380ab",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "فري فاير 110",
+    "price": 12000.0,
+    "game_id": "71571665",
+    "status": "مكتمل",
+    "timestamp": "2026-04-03T20:50:45.835796",
+    "timestamp_formatted": "08:50 مساءً 2026-04-03"
+  },
+  {
+    "id": "ece5b52f-4bc0-4376-9583-4b9393f8a8af",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "فري فاير 110",
+    "price": 12000.0,
+    "game_id": "61526155",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T12:23:29.369927",
+    "timestamp_formatted": "12:23 مساءً 2026-04-06"
+  },
+  {
+    "id": "c90db273-c4a8-4b1e-bf2c-b8eea59051fd",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 0,
+    "game_id": "83628162667",
+    "status": "مكتمل",
+    "timestamp": "2026-04-06T12:26:53.741342",
+    "timestamp_formatted": "12:26 مساءً 2026-04-06",
+    "transaction_id": "83628162667"
+  },
+  {
+    "id": "23097c4c-d598-40c6-9561-ee7163f83c68",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 0,
+    "game_id": "38638352725",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T12:39:30.671409",
+    "timestamp_formatted": "12:39 مساءً 2026-04-06",
+    "transaction_id": "38638352725"
+  },
+  {
+    "id": "dca5811d-171a-4341-aacb-1fd64d943a73",
+    "user_id": "6365858942",
+    "item_name": "شحن رصيد (38638352725)",
+    "price": 120.0,
+    "status": "مكتمل",
+    "timestamp": "2026-04-06T12:50:06.051041",
+    "timestamp_formatted": "12:50 مساءً 2026-04-06"
+  },
+  {
+    "id": "e078d1a0-9aad-404c-9993-84364fe8a99a",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 1500.0,
+    "game_id": "7757554",
+    "status": "مكتمل",
+    "timestamp": "2026-04-06T19:31:01.953575",
+    "timestamp_formatted": "07:31 مساءً 2026-04-06",
+    "transaction_id": "7757554"
+  },
+  {
+    "id": "0d9bba64-a3a3-49c3-bc7c-b2ae9ee07a10",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 0,
+    "game_id": "82637367363",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T19:38:34.692171",
+    "timestamp_formatted": "07:38 مساءً 2026-04-06",
+    "transaction_id": "82637367363"
+  },
+  {
+    "id": "1f022d6d-b6b5-4789-9120-1c2f8143e2ca",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "فري فاير 583",
+    "price": 60000.0,
+    "game_id": "28728272726",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T19:39:22.387614",
+    "timestamp_formatted": "07:39 مساءً 2026-04-06"
+  },
+  {
+    "id": "896da1cc-e9d8-4bfa-a0c8-eabd0f6d2583",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 0,
+    "game_id": "7252725255",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T19:46:38.378307",
+    "timestamp_formatted": "07:46 مساءً 2026-04-06",
+    "transaction_id": "7252725255"
+  },
+  {
+    "id": "15a75d73-75d0-4761-80ee-a471b2841fc6",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 0,
+    "game_id": "816171651",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T19:47:15.238809",
+    "timestamp_formatted": "07:47 مساءً 2026-04-06",
+    "transaction_id": "816171651"
+  },
+  {
+    "id": "15fc54ae-1cce-4ae9-9b2f-85ae91548d4c",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 0,
+    "game_id": "28637262726",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T19:48:19.391915",
+    "timestamp_formatted": "07:48 مساءً 2026-04-06",
+    "transaction_id": "28637262726"
+  },
+  {
+    "id": "6c828d13-cca9-4766-9d42-474a5f607c32",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "ببجي 1800",
+    "price": 280000.0,
+    "game_id": "٦٣٥٣٧",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T20:08:00.558039",
+    "timestamp_formatted": "08:08 مساءً 2026-04-06"
+  },
+  {
+    "id": "d5c93478-9528-4a91-b77a-03dcbe783adb",
+    "user_id": "6365858942",
+    "username": "mhama1kjokbi",
+    "item_name": "شحن رصيد",
+    "price": 0,
+    "game_id": "735375625",
+    "status": "مرفوض",
+    "timestamp": "2026-04-06T20:09:08.785635",
+    "timestamp_formatted": "08:09 مساءً 2026-04-06",
+    "transaction_id": "735375625"
+  }
+]
