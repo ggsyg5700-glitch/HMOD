@@ -904,6 +904,19 @@ def api_send_backup_to_bot():
             os.remove(zip_path)
         return jsonify({"success": False, "message": str(e)}), 500
 
+def _keep_alive():
+    url = (WEBHOOK_URL or "").rstrip("/")
+    if not url:
+        return
+    while True:
+        time.sleep(840)
+        try:
+            requests.get(url + "/ping", timeout=10)
+        except Exception:
+            pass
+
+Thread(target=_keep_alive, daemon=True).start()
+
 def run_flask():
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
 
