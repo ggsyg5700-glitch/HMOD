@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Bot
-        run: curl -s -o /dev/null -w "%{http_code}" ${{ secrets.RENDER_URL }}/ping
+        run: curl -s https://hmod-dbl8.onrender.com/ping
