@@ -1,45 +1,70 @@
-# [Project name]
+# Telegram Bot - Admin Dashboard
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+## ✅ الحالة الحالية (27 ديسمبر 2025)
 
-## Run & Operate
+### البوت يعمل بشكل صحيح تماماً ✅
+- **حالة البوت:** RUNNING
+- **Flask Server:** يعمل على port 5000
+- **رابط لوحة التحكم:** متاح
+- **جميع الملفات:** محملة وصحيحة
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+### الميزات المُضافة (Turn 1-3):
+1. ✅ **نسبة الربح التلقائية** - إضافة نسبة ربح على السلع
+2. ✅ **نظام العروض** - إضافة/تعديل/حذف العروض
+3. ✅ **وضع الصيانة** - إيقاف البوت للصيانة
+4. ✅ **تعديل رقم الإيداع** - واجهة لتغيير رقم الحساب
+5. ✅ **إصلاح واجهة لوحة التحكم** - استرجاع الواجهة الأصلية
 
-## Stack
+### الميزات المُضافة (آخر تحديث):
+6. ✅ **فاتورة محدّثة عند القبول/الرفض** - عند قبول أو رفض طلب شراء، يتلقى الزبون نفس الفاتورة الأصلية مع حالة القبول أو الرفض بشكل واضح
+7. ✅ **إيصال شحن رصيد** - عند تأكيد شحن الرصيد، يتلقى الزبون إيصالاً كاملاً يشمل المبلغ والرصيد الجديد ورقم العملية
+8. ✅ **إزالة قيود رقم العملية** - البوت يقبل رقم العملية مباشرة دون إظهار رسالة خطأ للزبون
+9. ✅ **إصلاح إرسال الملفات** - حل مشكلة "فشل الإرسال" في نسخة الملفات للبوت، مع معالجة دقيقة للأخطاء
+10. ✅ **الأرصدة محفوظة دائماً** - الأرصدة محفوظة في balance.json وتبقى حتى بعد إيقاف وتشغيل البوت
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+### لوحة التحكم:
+- **تسجيل دخول:** محمي بكلمة سر
+- **كلمة السر الافتراضية:** admin123
+- **الأقسام المتاحة:**
+  - 📊 حالة البوت
+  - 👥 المستخدمين
+  - 🛍️ السلع والأسعار
+  - 📦 الطلبات
+  - ⚙️ الإعدادات والأدوات
 
-## Where things live
+### الملفات الرئيسية:
+- **main.py** - ملف البوت الرئيسي (2366 سطر)
+- **static/dashboard.html** - واجهة الويب
+- **static/dashboard.css** - الأنماط
+- **static/dashboard.js** - المنطق
+- **goods.json** - السلع
+- **users.json** - المستخدمين
+- **orders.json** - الطلبات
+- **settings.json** - الإعدادات
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+### API Endpoints:
+- `/api/auth` - تحقق كلمة السر
+- `/api/status` - حالة البوت
+- `/api/goods` - إدارة السلع
+- `/api/users` - إدارة المستخدمين
+- `/api/orders` - عرض الطلبات
+- `/api/settings/deposit-number` - تعديل رقم الإيداع
+- `/api/settings/profit-margin` - تعديل نسبة الربح
+- `/api/offers` - إدارة العروض
+- `/api/maintenance` - التحكم في وضع الصيانة
 
-## Architecture decisions
+### خطوات الدخول:
+1. اذهب لرابط لوحة التحكم
+2. أدخل كلمة السر: **admin123**
+3. استمتع بلوحة التحكم الكاملة
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+### ملاحظات:
+- البوت يعمل بوضع polling
+- جميع البيانات محفوظة في ملفات JSON
+- النسخ الاحتياطي التلقائي مفعل
+- وضع الصيانة يعطل البوت عن المستخدمين (الأدمن فقط)
 
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+### الحالة النهائية:
+✅ البوت جاهز للاستخدام الفوري
+✅ الواجهة تعمل بدون أخطاء
+✅ جميع الميزات المطلوبة مُضافة
