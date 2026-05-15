@@ -1,0 +1,11 @@
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Bot
+        run: curl -s https://hmod-dbl8.onrender.com/ping
