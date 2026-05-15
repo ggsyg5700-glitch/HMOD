@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "U_voZb7jgapgPlSyoWj1P"
+uri = "file://main_updated.zip"
+type = "unspecified"
+title = "main.py (بعد التعديل)"
