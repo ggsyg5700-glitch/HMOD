@@ -196,17 +196,5 @@
     "timestamp": "2026-04-06T20:09:08.785635",
     "timestamp_formatted": "08:09 مساءً 2026-04-06",
     "transaction_id": "735375625"
-  },
-  {
-    "id": "f5f3a4ca-ce7e-4943-bf04-676423fdd25b",
-    "user_id": "7234281238",
-    "username": "Gtgtgt760",
-    "item_name": "شحن رصيد",
-    "price": 0,
-    "game_id": "2972827282",
-    "status": "مرفوض",
-    "timestamp": "2026-05-15T15:31:40.662996",
-    "timestamp_formatted": "03:31 مساءً 2026-05-15",
-    "transaction_id": "2972827282"
   }
 ]
