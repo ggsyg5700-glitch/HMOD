@@ -171,7 +171,9 @@ orders = load_json(ORDERS_FILE, [])
 balance = load_json(BALANCE_FILE, {})
 settings = load_json(SETTINGS_FILE, {"welcome_message": "🎮 أهلاً بك في البوت!", "profit_percentage": 10, "deposit_numbers": ["97675410"]})
 violations = load_json(VIOLATIONS_FILE, {})
-user_states = {}
+user_states         = {}
+pending_order_msgs  = {}   # msg_id -> {uid, idx}
+pending_charge_msgs = {}   # msg_id -> {target_uid, trans_id}
 
 # --- منطق البوت (Commands & Handlers) ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -328,6 +330,33 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_states[uid] = None
         return
 
+    # فحص الرد على رسالة طلب معلّقة (حتى لو طلع الزبون ورجع)
+    reply_msg = update.message.reply_to_message
+    if reply_msg and reply_msg.message_id in pending_order_msgs:
+        info = pending_order_msgs[reply_msg.message_id]
+        if info["uid"] == uid:
+            user_states[uid] = f"awaiting_game_id_{info['idx']}"
+
+    # فحص الرد على رسالة شحن معلّقة (للأدمن)
+    if reply_msg and reply_msg.message_id in pending_charge_msgs and str(uid) == str(ADMIN_ID):
+        info = pending_charge_msgs[reply_msg.message_id]
+        try:
+            amount = float(text)
+            target_uid = info["target_uid"]
+            trans_id   = info["trans_id"]
+            kb = [[
+                InlineKeyboardButton(f"✅ تأكيد شحن {amount} ل.س", callback_data=f"confirm_{amount}_{target_uid}_{trans_id}"),
+                InlineKeyboardButton("❌ إلغاء", callback_data=f"reject_{target_uid}")
+            ]]
+            await update.message.reply_text(
+                f"❓ **تأكيد الشحن**\n\n👤 المستخدم: `{target_uid}`\n💰 المبلغ: **{amount} ل.س**\n🔢 رقم العملية: `{trans_id}`",
+                parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb)
+            )
+            return
+        except ValueError:
+            await update.message.reply_text("⚠️ أرسل رقم صحيح للمبلغ.")
+            return
+
     if user_states.get(uid, "").startswith("awaiting_game_id_"):
 
         idx = int(user_states[uid].split("_")[3])
@@ -433,7 +462,12 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     uid = str(update.effective_user.id)
     
-    if data == "back_to_cats":
+    if data == "cancel_order":
+        uid_cancel = str(update.effective_user.id)
+        user_states[uid_cancel] = None
+        await query.edit_message_text("❌ تم إلغاء الطلب.")
+
+    elif data == "back_to_cats":
         keyboard = [
             [InlineKeyboardButton("🔥 فري فاير", callback_data="cat_ff"),
              InlineKeyboardButton("🎯 ببجي",     callback_data="cat_pubg")]
@@ -482,16 +516,18 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         user_states[uid] = f"awaiting_game_id_{idx}"
-        await query.message.reply_text(
+        cancel_kb = InlineKeyboardMarkup([[InlineKeyboardButton("❌ إلغاء الطلب", callback_data="cancel_order")]])
+        sent = await query.message.reply_text(
             f"🧾 تفاصيل طلبك:\n"
             f"━━━━━━━━━━━━━━\n"
             f"📦 السلعة: {item['name']}\n"
             f"💰 السعر: {total_price:.0f} ل.س\n"
             f"💳 رصيدك: {u_bal:.0f} ل.س\n"
             f"━━━━━━━━━━━━━━\n\n"
-            f"📝 أرسل ID حسابك في اللعبة:",
-            reply_markup=ForceReply(selective=True, input_field_placeholder="اكتب ID حسابك هنا...")
+            f"📝 ارد على هذه الرسالة بـ ID حسابك في اللعبة:",
+            reply_markup=cancel_kb
         )
+        pending_order_msgs[sent.message_id] = {"uid": uid, "idx": idx}
     elif data == "settings_notif":
         await query.message.reply_text("🔔 **الإشعارات:** ستتوفر خدمة تخصيص الإشعارات قريباً في التحديث القادم.")
     elif data == "settings_lang":
@@ -600,14 +636,16 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         target_uid = parts[0]
         trans_id   = parts[1] if len(parts) > 1 else ""
         # حفظ الحالة مرتبطة بالمستخدم المحدد
-        user_states[f"charging_{ADMIN_ID}_{target_uid}"] = trans_id
-        await query.edit_message_text(
+        cancel_kb = InlineKeyboardMarkup([[InlineKeyboardButton("❌ إلغاء الشحن", callback_data=f"reject_{target_uid}")]])
+        sent = await query.message.reply_text(
             f"💰 **تحديد مبلغ الشحن**\n\n"
             f"👤 المستخدم: `{target_uid}`\n"
             f"🔢 رقم العملية: `{trans_id}`\n\n"
-            f"أرسل الآن المبلغ المراد إضافته (أرقام فقط):",
-            parse_mode="Markdown"
+            f"📝 ارد على هذه الرسالة بالمبلغ المراد إضافته:",
+            parse_mode="Markdown",
+            reply_markup=cancel_kb
         )
+        pending_charge_msgs[sent.message_id] = {"target_uid": target_uid, "trans_id": trans_id}
     elif data.startswith("reject_deposit"):
         await query.edit_message_text("❌ تم إلغاء عملية الشحن.")
     elif data.startswith("reject_"):
