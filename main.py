@@ -195,7 +195,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [KeyboardButton("🛍️ السلع"), KeyboardButton("💰 رصيدي")],
         [KeyboardButton("📦 طلباتي"), KeyboardButton("➕ شحن رصيد")],
         [KeyboardButton("⚙️ الإعدادات"), KeyboardButton("👨‍💻 الدعم")],
-        [KeyboardButton("🏁 Start")]
+        [KeyboardButton("🏁 Start")],
+        [KeyboardButton("🎮 متجر الألعاب", web_app=WebAppInfo(url=WEBAPP_URL + "webapp"))]
     ]
     
     is_admin = users.get(uid, {}).get("role") == "admin" or str(uid) == str(ADMIN_ID)
