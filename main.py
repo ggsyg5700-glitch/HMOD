@@ -18,7 +18,7 @@ user_message_counts = defaultdict(list)
 spam_warned_users = set()
 
 try:
-    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
+    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, ForceReply
     from telegram.ext import (
         ApplicationBuilder,
         CommandHandler,
@@ -329,9 +329,6 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if user_states.get(uid, "").startswith("awaiting_game_id_"):
-        if not text.isdigit():
-            await update.message.reply_text("⚠️ يرجى إدخال ID مكون من أرقام فقط (لا يسمح بالحروف).")
-            return
 
         idx = int(user_states[uid].split("_")[3])
         item = goods[idx]
@@ -436,7 +433,14 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     uid = str(update.effective_user.id)
     
-    if data in ("cat_ff", "cat_pubg"):
+    if data == "back_to_cats":
+        keyboard = [
+            [InlineKeyboardButton("🔥 فري فاير", callback_data="cat_ff"),
+             InlineKeyboardButton("🎯 ببجي",     callback_data="cat_pubg")]
+        ]
+        await query.edit_message_text("🛍️ اختر اللعبة:", reply_markup=InlineKeyboardMarkup(keyboard))
+
+    elif data in ("cat_ff", "cat_pubg"):
         is_ff   = data == "cat_ff"
         keyword = "فري فاير" if is_ff else "ببجي"
         title   = "🔥 فري فاير" if is_ff else "🎯 ببجي"
@@ -444,20 +448,50 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         filtered = [(idx, item) for idx, item in enumerate(goods)
                     if keyword in item.get('name', '')]
         if not filtered:
-            await query.message.reply_text(f"لا توجد سلع متوفرة لـ {title} حالياً.")
+            await query.edit_message_text(f"لا توجد سلع متوفرة لـ {title} حالياً.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 رجوع", callback_data="back_to_cats")]]))
             return
         text = f"{title} — السلع المتوفرة:\n\n"
         kb   = []
         for idx, item in filtered:
             price       = item.get('price', 0)
             total_price = price + (price * profit / 100)
-            text += f"• {item['name']} — {total_price:.0f} ل.س\n"
-            kb.append([InlineKeyboardButton(f"🛒 شراء {item['name']}", callback_data=f"buy_{idx}")])
-        await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(kb))
+            text += f"🔹 {item['name']} — {total_price:.0f} ل.س\n"
+            kb.append([InlineKeyboardButton(f"🛒 {item['name']} — {total_price:.0f} ل.س", callback_data=f"buy_{idx}")])
+        kb.append([InlineKeyboardButton("🔙 رجوع", callback_data="back_to_cats")])
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(kb))
+
     elif data.startswith("buy_"):
-        idx = int(data.split("_")[1])
+        idx  = int(data.split("_")[1])
+        if idx >= len(goods):
+            await query.answer("⚠️ السلعة غير موجودة", show_alert=True)
+            return
+        item        = goods[idx]
+        profit      = settings.get('profit_percentage', 0)
+        price       = item.get('price', 0)
+        total_price = price + (price * profit / 100)
+        u_bal       = balance.get(uid, 0)
+
+        if u_bal < total_price:
+            await query.answer("❌ رصيدك غير كافٍ!", show_alert=True)
+            await query.message.reply_text(
+                f"❌ رصيدك الحالي ({u_bal:.0f} ل.س) غير كافٍ لشراء:\n"
+                f"🔹 {item['name']} — {total_price:.0f} ل.س\n\n"
+                f"💳 اشحن رصيدك أولاً عبر زر «➕ شحن رصيد»"
+            )
+            return
+
         user_states[uid] = f"awaiting_game_id_{idx}"
-        await query.message.reply_text(f"🎮 يرجى إدخال ID اللعبة (أرقام فقط):")
+        await query.message.reply_text(
+            f"🧾 تفاصيل طلبك:\n"
+            f"━━━━━━━━━━━━━━\n"
+            f"📦 السلعة: {item['name']}\n"
+            f"💰 السعر: {total_price:.0f} ل.س\n"
+            f"💳 رصيدك: {u_bal:.0f} ل.س\n"
+            f"━━━━━━━━━━━━━━\n\n"
+            f"📝 أرسل ID حسابك في اللعبة:",
+            reply_markup=ForceReply(selective=True, input_field_placeholder="اكتب ID حسابك هنا...")
+        )
     elif data == "settings_notif":
         await query.message.reply_text("🔔 **الإشعارات:** ستتوفر خدمة تخصيص الإشعارات قريباً في التحديث القادم.")
     elif data == "settings_lang":
