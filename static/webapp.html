@@ -8,459 +8,349 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        :root {
-            --bg: #f0f2f5;
-            --card: #ffffff;
-            --text: #1a1a2e;
-            --muted: #6b7280;
-            --radius: 20px;
-            --shadow: 0 4px 20px rgba(0,0,0,0.07);
-            --g-games:   linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            --g-charge:  linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
-            --g-account: linear-gradient(135deg, #8e2de2 0%, #da70d6 100%);
-            --g-support: linear-gradient(135deg, #f85032 0%, #ff8e53 100%);
-            --g-ff:      linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-            --g-pubg:    linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);
-        }
-
-        html, body {
-            min-height: 100vh;
-            background: var(--bg);
+        body {
+            background: #f4f5f7;
             font-family: -apple-system, 'Segoe UI', Tahoma, Arial, sans-serif;
-            color: var(--text);
-            overflow-x: hidden;
+            padding: 16px;
+            min-height: 100vh;
         }
 
-        /* ── Views ── */
-        .view { display: none; min-height: 100vh; padding: 20px 16px 30px; animation: fadeUp .28s ease; }
-        .view.active { display: block; }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(14px); }
+        /* ── Welcome bar ── */
+        .welcome {
+            background: #fff;
+            border-radius: 18px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        }
+        .welcome-avatar {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; flex-shrink: 0;
+        }
+        .welcome-name { font-size: .95rem; font-weight: 800; color: #1a1a2e; }
+        .welcome-sub  { font-size: .78rem; color: #888; margin-top: 2px; }
+
+        /* ── Balance pill ── */
+        .balance-pill {
+            background: linear-gradient(135deg,#43cea2,#185a9d);
+            border-radius: 14px;
+            padding: 12px 18px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(67,206,162,.3);
+        }
+        .balance-pill .bp-label { font-size: .82rem; opacity: .88; }
+        .balance-pill .bp-amount { font-size: 1.5rem; font-weight: 900; }
+        .balance-pill .bp-cur { font-size: .8rem; opacity: .8; }
+        .balance-pill .bp-icon { font-size: 2rem; }
+
+        /* ── Section label ── */
+        .sec-label {
+            font-size: .78rem; font-weight: 800;
+            color: #999; letter-spacing: .6px;
+            text-transform: uppercase;
+            margin: 14px 4px 8px;
+        }
+
+        /* ── Button grid ── */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+        /* ── Action button ── */
+        .act-btn {
+            border-radius: 16px;
+            padding: 18px 12px;
+            text-align: center;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 5px 16px rgba(0,0,0,.13);
+            transition: transform .14s ease, box-shadow .14s ease;
+            user-select: none;
+            border: none;
+            outline: none;
+        }
+        .act-btn:active { transform: scale(.93); box-shadow: 0 2px 6px rgba(0,0,0,.13); }
+        .act-btn .ab-icon  { font-size: 2rem; display: block; margin-bottom: 7px; }
+        .act-btn .ab-label { font-size: .9rem; font-weight: 800; }
+
+        /* individual button colors */
+        .btn-start   { background: linear-gradient(135deg,#11998e,#38ef7d); box-shadow: 0 5px 16px rgba(17,153,142,.3); }
+        .btn-goods   { background: linear-gradient(135deg,#8e2de2,#4a00e0); box-shadow: 0 5px 16px rgba(142,45,226,.3); }
+        .btn-balance { background: linear-gradient(135deg,#f7971e,#ffd200); box-shadow: 0 5px 16px rgba(247,151,30,.3); }
+        .btn-orders  { background: linear-gradient(135deg,#2193b0,#6dd5ed); box-shadow: 0 5px 16px rgba(33,147,176,.3); }
+        .btn-charge  { background: linear-gradient(135deg,#43cea2,#185a9d); box-shadow: 0 5px 16px rgba(67,206,162,.3); }
+        .btn-support { background: linear-gradient(135deg,#f85032,#e73827); box-shadow: 0 5px 16px rgba(248,80,50,.3); }
+
+        /* ── Goods sub-section ── */
+        .goods-section {
+            display: none;
+            margin-top: 12px;
+        }
+        .goods-section.open { display: block; animation: popIn .22s ease; }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Header ── */
-        .header { text-align: center; margin-bottom: 22px; }
-        .header-icon {
-            width: 64px; height: 64px; border-radius: 50%;
-            background: var(--g-games);
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 12px; font-size: 30px;
-            box-shadow: 0 6px 20px rgba(17,153,142,.35);
-        }
-        .header h1 { font-size: 1.35rem; font-weight: 800; }
-        .header p  { font-size: .88rem; color: var(--muted); margin-top: 3px; }
+        .goods-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 14px; }
 
-        /* ── Balance Card ── */
-        .balance-card {
-            background: var(--g-charge);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            margin-bottom: 22px;
-            color: #fff;
+        /* game category cards */
+        .game-btn {
+            border-radius: 16px;
+            padding: 20px 12px;
             text-align: center;
-            box-shadow: 0 8px 24px rgba(33,147,176,.3);
-        }
-        .balance-card .lbl { font-size: .82rem; opacity: .85; margin-bottom: 5px; }
-        .balance-card .amt { font-size: 2.1rem; font-weight: 900; line-height: 1; }
-        .balance-card .cur { font-size: .85rem; opacity: .8; }
-
-        /* ── 2x2 Grid ── */
-        .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
-
-        /* ── Main Card ── */
-        .main-card {
-            border-radius: var(--radius);
-            padding: 22px 12px 18px;
-            text-align: center; color: #fff;
+            color: #fff;
             cursor: pointer;
-            transition: transform .15s ease, box-shadow .15s ease;
-            box-shadow: 0 6px 20px rgba(0,0,0,.14);
+            box-shadow: 0 5px 18px rgba(0,0,0,.16);
+            transition: transform .14s ease;
             user-select: none;
+            position: relative;
+            overflow: hidden;
         }
-        .main-card:active { transform: scale(.94); box-shadow: 0 2px 8px rgba(0,0,0,.14); }
-        .main-card .mc-icon { font-size: 2.3rem; display: block; margin-bottom: 9px; }
-        .main-card .mc-title { font-size: .98rem; font-weight: 800; }
-
-        /* ── Back Button ── */
-        .back-btn {
-            display: inline-flex; align-items: center; gap: 7px;
-            background: var(--card); border: none; border-radius: 12px;
-            padding: 9px 16px; font-size: .92rem; font-weight: 700;
-            color: var(--muted); cursor: pointer; margin-bottom: 18px;
-            box-shadow: var(--shadow);
-        }
-
-        /* ── Section Title ── */
-        .sec-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; }
-
-        /* ── Game Category Card ── */
-        .game-card {
-            border-radius: var(--radius);
-            padding: 26px 20px;
-            color: #fff; cursor: pointer;
-            transition: transform .15s ease;
-            box-shadow: 0 8px 24px rgba(0,0,0,.18);
-            user-select: none;
-            position: relative; overflow: hidden;
-            margin-bottom: 14px;
-        }
-        .game-card:active { transform: scale(.96); }
-        .game-card::before {
+        .game-btn:active { transform: scale(.93); }
+        .game-btn::before {
             content: '';
-            position: absolute; top: -25%; right: -8%;
-            width: 110px; height: 110px; border-radius: 50%;
-            background: rgba(255,255,255,.1);
+            position: absolute; top: -20%; right: -10%;
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(255,255,255,.12);
         }
-        .game-card .gc-top { display: flex; align-items: center; gap: 14px; }
-        .game-card .gc-icon { font-size: 2.8rem; }
-        .game-card .gc-title { font-size: 1.4rem; font-weight: 900; }
-        .game-card .gc-sub { font-size: .83rem; opacity: .82; margin-top: 3px; }
-        .game-card .gc-badge {
-            display: inline-block; background: rgba(255,255,255,.22);
-            border-radius: 50px; padding: 3px 11px; font-size: .75rem;
-            font-weight: 700; margin-top: 10px;
-        }
+        .game-btn .gb-icon  { font-size: 2.2rem; display: block; margin-bottom: 7px; }
+        .game-btn .gb-label { font-size: .95rem; font-weight: 900; }
+        .game-btn .gb-sub   { font-size: .72rem; opacity: .82; margin-top: 3px; }
 
-        /* ── Items ── */
-        .items-list { display: flex; flex-direction: column; gap: 11px; }
-        .item-card {
-            background: var(--card); border-radius: 16px; padding: 14px 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            box-shadow: var(--shadow); cursor: pointer;
-            transition: transform .13s ease;
+        .btn-ff   { background: linear-gradient(135deg,#ff416c,#ff4b2b); box-shadow: 0 5px 16px rgba(255,65,108,.3); }
+        .btn-pubg { background: linear-gradient(135deg,#f7b733,#fc4a1a); box-shadow: 0 5px 16px rgba(247,183,51,.3); }
+
+        /* ── Items list ── */
+        .items-box {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07);
         }
-        .item-card:active { transform: scale(.98); }
-        .item-left { display: flex; align-items: center; gap: 12px; }
-        .item-icon-box {
-            width: 48px; height: 48px;
-            background: #f3f4f6; border-radius: 12px;
+        .items-box-header {
+            padding: 12px 16px;
+            font-weight: 800;
+            font-size: .9rem;
+            border-bottom: 1px solid #f0f0f0;
+            color: #1a1a2e;
+        }
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f7f7f7;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-left { display: flex; align-items: center; gap: 10px; }
+        .item-ico {
+            width: 40px; height: 40px;
+            background: #f3f4f6; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.7rem; flex-shrink: 0;
+            font-size: 1.4rem;
         }
-        .item-name { font-size: .93rem; font-weight: 700; }
-        .item-desc { font-size: .78rem; color: var(--muted); margin-top: 2px; }
-        .item-price { font-size: 1rem; font-weight: 900; color: #11998e; white-space: nowrap; }
+        .item-name { font-size: .88rem; font-weight: 700; color: #1a1a2e; }
+        .item-desc { font-size: .73rem; color: #888; margin-top: 1px; }
+        .item-price { font-size: .9rem; font-weight: 900; color: #11998e; white-space: nowrap; }
 
-        /* ── Info Card ── */
-        .info-card { background: var(--card); border-radius: var(--radius); padding: 6px 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
-        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid #f3f4f6; }
-        .info-row:last-child { border-bottom: none; }
-        .info-lbl { font-size: .88rem; color: var(--muted); }
-        .info-val { font-size: .92rem; font-weight: 700; }
-
-        /* ── Steps ── */
-        .step-card {
-            background: var(--card); border-radius: 16px; padding: 15px 16px;
-            box-shadow: var(--shadow); margin-bottom: 12px;
-            display: flex; align-items: flex-start; gap: 13px;
-        }
-        .step-num {
-            width: 34px; height: 34px; border-radius: 50%;
-            background: var(--g-charge); color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: .88rem; flex-shrink: 0;
-        }
-        .step-title { font-weight: 700; font-size: .92rem; margin-bottom: 4px; }
-        .step-desc  { font-size: .82rem; color: var(--muted); line-height: 1.55; }
-        .num-tag {
-            display: inline-block; background: #e8f5e9; color: #2e7d32;
-            border-radius: 8px; padding: 5px 12px; font-weight: 700;
-            font-size: .9rem; font-family: monospace; margin: 3px 2px; cursor: pointer;
-        }
+        .loading-txt { text-align: center; padding: 22px; color: #aaa; font-size: .85rem; }
+        .empty-txt   { text-align: center; padding: 22px; color: #bbb; font-size: .85rem; }
 
         /* ── Toast ── */
         .toast {
-            position: fixed; bottom: 22px; left: 50%;
-            transform: translateX(-50%) translateY(80px);
-            background: rgba(20,20,20,.88); color: #fff;
-            padding: 11px 22px; border-radius: 50px;
-            font-size: .88rem; font-weight: 700; z-index: 9999;
-            transition: transform .28s ease; white-space: nowrap;
-            pointer-events: none;
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%) translateY(60px);
+            background: rgba(20,20,20,.9); color: #fff;
+            padding: 10px 20px; border-radius: 50px;
+            font-size: .84rem; font-weight: 700; z-index: 9999;
+            transition: transform .25s ease; pointer-events: none;
         }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-
-        /* ── Loading / Empty ── */
-        .loading { text-align: center; padding: 40px; color: var(--muted); font-size: .95rem; }
-        .empty { text-align: center; padding: 44px 20px; color: var(--muted); }
-        .empty .e-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
-        .empty .e-title { font-weight: 700; margin-bottom: 6px; }
-        .empty .e-sub { font-size: .83rem; }
-
-        /* ── Support Button ── */
-        .support-btn {
-            display: inline-block;
-            background: var(--g-support); color: #fff;
-            text-decoration: none; padding: 13px 30px;
-            border-radius: 50px; font-weight: 800; font-size: .95rem;
-            box-shadow: 0 6px 18px rgba(248,80,50,.35);
-            transition: transform .15s;
-        }
-        .support-btn:active { transform: scale(.96); }
+        .toast.on { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
 
-<!-- ══════════ MAIN VIEW ══════════ -->
-<div class="view active" id="view-main">
-    <div class="header">
-        <div class="header-icon">🎮</div>
-        <h1 id="user-greeting">مرحباً!</h1>
-        <p>متجر الألعاب المتخصص</p>
-    </div>
-
-    <div class="balance-card">
-        <div class="lbl">💰 رصيدك الحالي</div>
-        <div><span class="amt" id="main-balance">--</span> <span class="cur">ل.س</span></div>
-    </div>
-
-    <div class="grid-2x2">
-        <div class="main-card" style="background:var(--g-games);" onclick="go('view-games')">
-            <span class="mc-icon">🎮</span>
-            <div class="mc-title">الألعاب</div>
-        </div>
-        <div class="main-card" style="background:var(--g-charge);" onclick="go('view-recharge')">
-            <span class="mc-icon">💳</span>
-            <div class="mc-title">شحن رصيد</div>
-        </div>
-        <div class="main-card" style="background:var(--g-account);" onclick="go('view-account')">
-            <span class="mc-icon">👤</span>
-            <div class="mc-title">حسابي</div>
-        </div>
-        <div class="main-card" style="background:var(--g-support);" onclick="go('view-support')">
-            <span class="mc-icon">💬</span>
-            <div class="mc-title">الدعم الفني</div>
-        </div>
+<!-- Welcome -->
+<div class="welcome">
+    <div class="welcome-avatar">🎮</div>
+    <div>
+        <div class="welcome-name" id="uname">مرحباً!</div>
+        <div class="welcome-sub">متجر الألعاب المتخصص</div>
     </div>
 </div>
 
-<!-- ══════════ GAMES VIEW ══════════ -->
-<div class="view" id="view-games">
-    <button class="back-btn" onclick="go('view-main')">&#8594; رجوع</button>
-    <div class="sec-title">🎮 اختر اللعبة</div>
-
-    <div class="game-card" style="background:var(--g-ff);" onclick="showItems('ff')">
-        <div class="gc-top">
-            <span class="gc-icon">🔥</span>
-            <div>
-                <div class="gc-title">فري فاير</div>
-                <div class="gc-sub">Free Fire — جواهر وباصات</div>
-            </div>
-        </div>
-        <span class="gc-badge">🛒 تسوق الآن</span>
+<!-- Balance -->
+<div class="balance-pill">
+    <div>
+        <div class="bp-label">💰 رصيدك الحالي</div>
+        <div><span class="bp-amount" id="bal">--</span> <span class="bp-cur">ل.س</span></div>
     </div>
-
-    <div class="game-card" style="background:var(--g-pubg);" onclick="showItems('pubg')">
-        <div class="gc-top">
-            <span class="gc-icon">🎯</span>
-            <div>
-                <div class="gc-title">ببجي</div>
-                <div class="gc-sub">PUBG — UC والمزيد</div>
-            </div>
-        </div>
-        <span class="gc-badge">🛒 تسوق الآن</span>
-    </div>
+    <div class="bp-icon">💳</div>
 </div>
 
-<!-- ══════════ ITEMS VIEW ══════════ -->
-<div class="view" id="view-items">
-    <button class="back-btn" onclick="go('view-games')">&#8594; رجوع</button>
-    <div class="sec-title" id="items-title">المنتجات</div>
-    <div class="items-list" id="items-list">
-        <div class="loading">⏳ جاري التحميل...</div>
-    </div>
+<!-- Buttons -->
+<div class="sec-label">القائمة الرئيسية</div>
+
+<div class="btn-grid">
+    <button class="act-btn btn-start" onclick="sendCmd('/start')">
+        <span class="ab-icon">🏁</span>
+        <span class="ab-label">Start</span>
+    </button>
+    <button class="act-btn btn-goods" onclick="toggleGoods()">
+        <span class="ab-icon">🛍️</span>
+        <span class="ab-label">السلع</span>
+    </button>
+    <button class="act-btn btn-balance" onclick="sendCmd('💰 رصيدي')">
+        <span class="ab-icon">💰</span>
+        <span class="ab-label">رصيدي</span>
+    </button>
+    <button class="act-btn btn-orders" onclick="sendCmd('📦 طلباتي')">
+        <span class="ab-icon">📦</span>
+        <span class="ab-label">طلباتي</span>
+    </button>
+    <button class="act-btn btn-charge" onclick="sendCmd('➕ شحن رصيد')">
+        <span class="ab-icon">➕</span>
+        <span class="ab-label">شحن رصيد</span>
+    </button>
+    <button class="act-btn btn-support" onclick="sendCmd('👨‍💻 الدعم')">
+        <span class="ab-icon">👨‍💻</span>
+        <span class="ab-label">الدعم</span>
+    </button>
 </div>
 
-<!-- ══════════ ACCOUNT VIEW ══════════ -->
-<div class="view" id="view-account">
-    <button class="back-btn" onclick="go('view-main')">&#8594; رجوع</button>
-    <div class="sec-title">👤 معلومات حسابي</div>
-    <div class="info-card">
-        <div class="info-row">
-            <span class="info-lbl">الاسم</span>
-            <span class="info-val" id="acc-name">--</span>
+<!-- Goods sub-section -->
+<div class="goods-section" id="goods-section">
+    <div class="sec-label">اختر اللعبة</div>
+    <div class="goods-row">
+        <div class="game-btn btn-ff" onclick="loadItems('ff')">
+            <span class="gb-icon">🔥</span>
+            <div class="gb-label">فري فاير</div>
+            <div class="gb-sub">جواهر وباصات</div>
         </div>
-        <div class="info-row">
-            <span class="info-lbl">Telegram ID</span>
-            <span class="info-val" id="acc-id">--</span>
-        </div>
-        <div class="info-row">
-            <span class="info-lbl">💰 الرصيد</span>
-            <span class="info-val" id="acc-balance" style="color:#11998e;">--</span>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════ RECHARGE VIEW ══════════ -->
-<div class="view" id="view-recharge">
-    <button class="back-btn" onclick="go('view-main')">&#8594; رجوع</button>
-    <div class="sec-title">💳 شحن الرصيد</div>
-
-    <div class="step-card">
-        <div class="step-num">1</div>
-        <div>
-            <div class="step-title">افتح تطبيق سيرتيل كاش</div>
-            <div class="step-desc">افتح التطبيق واختر "التحويل اليدوي"</div>
+        <div class="game-btn btn-pubg" onclick="loadItems('pubg')">
+            <span class="gb-icon">🎯</span>
+            <div class="gb-label">ببجي</div>
+            <div class="gb-sub">UC والمزيد</div>
         </div>
     </div>
 
-    <div class="step-card">
-        <div class="step-num">2</div>
-        <div>
-            <div class="step-title">حوّل لأحد الأرقام التالية</div>
-            <div class="step-desc" id="deposit-numbers">⏳ جاري التحميل...</div>
-        </div>
-    </div>
-
-    <div class="step-card">
-        <div class="step-num">3</div>
-        <div>
-            <div class="step-title">أرسل رقم العملية للبوت</div>
-            <div class="step-desc">بعد التحويل أرسل رقم العملية مباشرةً للبوت وسيتم الشحن فوراً</div>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════ SUPPORT VIEW ══════════ -->
-<div class="view" id="view-support">
-    <button class="back-btn" onclick="go('view-main')">&#8594; رجوع</button>
-    <div class="sec-title">💬 الدعم الفني</div>
-    <div class="info-card" style="padding:28px 20px;text-align:center;">
-        <div style="font-size:3.2rem;margin-bottom:14px;">🎧</div>
-        <div style="font-size:1.05rem;font-weight:800;margin-bottom:8px;">هل تحتاج مساعدة؟</div>
-        <div style="font-size:.87rem;color:var(--muted);margin-bottom:20px;line-height:1.6;">
-            فريق الدعم جاهز للمساعدة<br>في أي وقت تحتاجه
-        </div>
-        <a href="https://t.me/mhama1kjokbi" class="support-btn">💬 تواصل معنا</a>
+    <div class="items-box" id="items-box" style="display:none;">
+        <div class="items-box-header" id="items-header">المنتجات</div>
+        <div id="items-body"><div class="loading-txt">⏳ جاري التحميل...</div></div>
     </div>
 </div>
 
 <script>
-    // ── Telegram WebApp Init ──
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
     const user = tg?.initDataUnsafe?.user || {};
-    const userId = user?.id || null;
+    const uid  = user?.id || null;
 
-    // ── Greeting & Account ──
-    const firstName = user.first_name || 'صديقي';
-    document.getElementById('user-greeting').textContent = `مرحباً، ${firstName}!`;
-    document.getElementById('acc-name').textContent = [user.first_name, user.last_name].filter(Boolean).join(' ') || '--';
-    document.getElementById('acc-id').textContent = userId || 'غير متاح';
+    // greeting
+    document.getElementById('uname').textContent =
+        'مرحباً، ' + (user.first_name || 'صديقي') + '!';
 
-    // ── View Navigation ──
-    function go(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        window.scrollTo(0, 0);
-    }
+    // balance
+    (async () => {
+        if (!uid) return;
+        try {
+            const r = await fetch('/api/public/balance/' + uid);
+            const d = await r.json();
+            document.getElementById('bal').textContent = d.balance ?? 0;
+        } catch { document.getElementById('bal').textContent = '0'; }
+    })();
 
-    // ── Toast ──
-    function toast(msg) {
-        const el = document.getElementById('toast');
-        el.textContent = msg;
-        el.classList.add('show');
-        setTimeout(() => el.classList.remove('show'), 2400);
-    }
-
-    // ── Copy ──
-    function copyNum(n) {
-        navigator.clipboard?.writeText(n).then(() => toast('✓ تم نسخ الرقم'));
-    }
-
-    // ── Item Emoji ──
-    function itemEmoji(name) {
-        name = name || '';
-        if (/جوهر|جواهر/i.test(name)) return '💎';
-        if (/باص|بطاقة|pass/i.test(name)) return '🎫';
-        if (/uc\b/i.test(name))          return '🪙';
-        if (/موسم|مرور/i.test(name))     return '📦';
-        if (/فري فاير|free fire/i.test(name)) return '🔥';
-        if (/ببجي|pubg|بابجي/i.test(name))   return '🎯';
-        return '🎮';
-    }
-
-    // ── Load Goods ──
-    let allGoods = [];
-    async function loadGoods() {
+    // goods cache
+    let goodsCache = null;
+    async function getGoods() {
+        if (goodsCache) return goodsCache;
         try {
             const r = await fetch('/api/public/goods');
-            allGoods = await r.json();
-        } catch { allGoods = []; }
+            goodsCache = await r.json();
+        } catch { goodsCache = []; }
+        return goodsCache;
     }
 
-    // ── Show Items ──
-    function showItems(game) {
-        go('view-items');
-        const titleEl = document.getElementById('items-title');
-        const listEl  = document.getElementById('items-list');
+    // toggle goods panel
+    let goodsOpen = false;
+    function toggleGoods() {
+        goodsOpen = !goodsOpen;
+        const sec = document.getElementById('goods-section');
+        sec.classList.toggle('open', goodsOpen);
+        if (!goodsOpen) document.getElementById('items-box').style.display = 'none';
+    }
 
-        let items, icon, title;
+    // load items for a game
+    async function loadItems(game) {
+        const box    = document.getElementById('items-box');
+        const header = document.getElementById('items-header');
+        const body   = document.getElementById('items-body');
+
+        box.style.display = 'block';
+        body.innerHTML = '<div class="loading-txt">⏳ جاري التحميل...</div>';
+
+        const all = await getGoods();
+        let items;
         if (game === 'ff') {
-            items = allGoods.filter(g => /فري فاير|free fire/i.test(g.name));
-            icon  = '🔥'; title = '🔥 فري فاير';
+            header.textContent = '🔥 فري فاير';
+            items = all.filter(g => /فري فاير|free fire/i.test(g.name));
         } else {
-            items = allGoods.filter(g => /ببجي|pubg|بابجي/i.test(g.name));
-            icon  = '🎯'; title = '🎯 ببجي';
+            header.textContent = '🎯 ببجي';
+            items = all.filter(g => /ببجي|pubg|بابجي/i.test(g.name));
         }
 
-        titleEl.textContent = title;
-
         if (items.length === 0) {
-            listEl.innerHTML = `
-                <div class="empty">
-                    <span class="e-icon">${icon}</span>
-                    <div class="e-title">لا توجد منتجات متاحة حالياً</div>
-                    <div class="e-sub">تواصل مع الدعم للاستفسار</div>
-                </div>`;
+            body.innerHTML = '<div class="empty-txt">لا توجد منتجات متاحة حالياً</div>';
             return;
         }
 
-        listEl.innerHTML = items.map(item => `
-            <div class="item-card">
+        body.innerHTML = items.map(it => `
+            <div class="item-row">
                 <div class="item-left">
-                    <div class="item-icon-box">${itemEmoji(item.name)}</div>
+                    <div class="item-ico">${emoji(it.name)}</div>
                     <div>
-                        <div class="item-name">${item.name}</div>
-                        ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+                        <div class="item-name">${it.name}</div>
+                        ${it.description ? `<div class="item-desc">${it.description}</div>` : ''}
                     </div>
                 </div>
-                <div class="item-price">${Math.round(item.price)} ل.س</div>
+                <div class="item-price">${Math.round(it.price)} ل.س</div>
             </div>`).join('');
     }
 
-    // ── Load Balance ──
-    async function loadBalance() {
-        if (!userId) return;
-        try {
-            const r = await fetch(`/api/public/balance/${userId}`);
-            const d = await r.json();
-            const b = d.balance ?? 0;
-            document.getElementById('main-balance').textContent = b;
-            document.getElementById('acc-balance').textContent  = b + ' ل.س';
-        } catch {
-            document.getElementById('main-balance').textContent = '0';
+    function emoji(n) {
+        if (/جوهر|جواهر|💎/i.test(n)) return '💎';
+        if (/باص|بطاقة|pass/i.test(n))  return '🎫';
+        if (/\buc\b/i.test(n))            return '🪙';
+        if (/موسم|مرور/i.test(n))         return '📦';
+        return '🎮';
+    }
+
+    // send command back to bot and close webapp
+    function sendCmd(cmd) {
+        if (tg) {
+            tg.sendData(cmd);
+        } else {
+            showToast('افتح من البوت');
         }
     }
 
-    // ── Load Deposit Numbers ──
-    async function loadDeposit() {
-        try {
-            const r = await fetch('/api/public/settings');
-            const d = await r.json();
-            const nums = d.deposit_numbers || [];
-            const el = document.getElementById('deposit-numbers');
-            el.innerHTML = nums.length
-                ? nums.map(n => `<span class="num-tag" onclick="copyNum('${n}')">${n} 📋</span>`).join('')
-                : '<span style="color:#999">لا يوجد أرقام متاحة</span>';
-        } catch {}
+    function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('on');
+        setTimeout(() => el.classList.remove('on'), 2200);
     }
-
-    // ── Init ──
-    Promise.all([loadGoods(), loadBalance(), loadDeposit()]);
 </script>
 </body>
 </html>
