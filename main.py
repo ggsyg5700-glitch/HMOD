@@ -211,17 +211,15 @@ async def goods_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not goods:
         await update.message.reply_text("عذراً، لا توجد سلع متوفرة حالياً.")
         return
-    
-    text = "🛍️ السلع المتوفرة:\n\n"
-    keyboard = []
-    profit = settings.get('profit_percentage', 0)
-    for idx, item in enumerate(goods):
-        price = item.get('price', 0)
-        total_price = price + (price * profit / 100)
-        text += f"{idx+1}. {item['name']} - {total_price} ليرة\n"
-        keyboard.append([InlineKeyboardButton(f"شراء {item['name']}", callback_data=f"buy_{idx}")])
-    
-    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+
+    keyboard = [
+        [InlineKeyboardButton("🔥 فري فاير", callback_data="cat_ff"),
+         InlineKeyboardButton("🎯 ببجي",     callback_data="cat_pubg")]
+    ]
+    await update.message.reply_text(
+        "🛍️ اختر اللعبة:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 async def balance_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update or not update.message: return
@@ -438,7 +436,25 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     uid = str(update.effective_user.id)
     
-    if data.startswith("buy_"):
+    if data in ("cat_ff", "cat_pubg"):
+        is_ff   = data == "cat_ff"
+        keyword = "فري فاير" if is_ff else "ببجي"
+        title   = "🔥 فري فاير" if is_ff else "🎯 ببجي"
+        profit  = settings.get('profit_percentage', 0)
+        filtered = [(idx, item) for idx, item in enumerate(goods)
+                    if keyword in item.get('name', '')]
+        if not filtered:
+            await query.message.reply_text(f"لا توجد سلع متوفرة لـ {title} حالياً.")
+            return
+        text = f"{title} — السلع المتوفرة:\n\n"
+        kb   = []
+        for idx, item in filtered:
+            price       = item.get('price', 0)
+            total_price = price + (price * profit / 100)
+            text += f"• {item['name']} — {total_price:.0f} ل.س\n"
+            kb.append([InlineKeyboardButton(f"🛒 شراء {item['name']}", callback_data=f"buy_{idx}")])
+        await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(kb))
+    elif data.startswith("buy_"):
         idx = int(data.split("_")[1])
         user_states[uid] = f"awaiting_game_id_{idx}"
         await query.message.reply_text(f"🎮 يرجى إدخال ID اللعبة (أرقام فقط):")
