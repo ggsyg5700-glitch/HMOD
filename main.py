@@ -607,6 +607,33 @@ def require_admin(f):
 def health():
     return "OK", 200
 
+@app.route('/webapp')
+def webapp_index():
+    return send_from_directory('static', 'webapp.html')
+
+@app.route('/api/public/goods')
+def api_public_goods():
+    profit = settings.get('profit_percentage', 0)
+    result = []
+    for item in goods:
+        price = item.get('price', 0)
+        total = price + (price * profit / 100)
+        result.append({
+            'id': item.get('id', ''),
+            'name': item.get('name', ''),
+            'price': total,
+            'description': item.get('description', '')
+        })
+    return jsonify(result)
+
+@app.route('/api/public/balance/<uid>')
+def api_public_balance(uid):
+    return jsonify({'balance': balance.get(str(uid), 0)})
+
+@app.route('/api/public/settings')
+def api_public_settings():
+    return jsonify({'deposit_numbers': settings.get('deposit_numbers', [])})
+
 @app.route('/')
 @app.route('/dashboard')
 def index():
