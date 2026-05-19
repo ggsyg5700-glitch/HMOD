@@ -193,14 +193,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_json(USERS_FILE, users)
         save_json(BALANCE_FILE, balance)
     
+    is_admin = users.get(uid, {}).get("role") == "admin" or str(uid) == str(ADMIN_ID)
+    webapp_user_url = WEBAPP_URL + "webapp" if WEBAPP_URL else ""
     keyboard = [
+        [KeyboardButton("🎮 فتح المتجر", web_app=WebAppInfo(url=webapp_user_url))] if webapp_user_url else [],
         [KeyboardButton("🛍️ السلع"), KeyboardButton("💰 رصيدي")],
         [KeyboardButton("📦 طلباتي"), KeyboardButton("➕ شحن رصيد")],
         [KeyboardButton("⚙️ الإعدادات"), KeyboardButton("👨‍💻 الدعم")],
         [KeyboardButton("🏁 Start")]
     ]
-    
-    is_admin = users.get(uid, {}).get("role") == "admin" or str(uid) == str(ADMIN_ID)
+    keyboard = [row for row in keyboard if row]
     if is_admin:
         keyboard.append([KeyboardButton("📊 لوحة الإدارة", web_app=WebAppInfo(url=WEBAPP_URL))])
 
@@ -1043,6 +1045,89 @@ def build_application():
     application.add_handler(CallbackQueryHandler(callback_handler))
     bot_application = application
     return application
+
+# --- WebApp User Routes ---
+@app.route('/webapp')
+def webapp_index():
+    response = send_from_directory('static', 'webapp.html')
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+@app.route('/api/public/goods', methods=['GET'])
+def api_public_goods():
+    return jsonify({"success": True, "data": goods})
+
+@app.route('/api/public/deposit-numbers', methods=['GET'])
+def api_public_deposit():
+    nums = settings.get("deposit_numbers", [])
+    return jsonify({"success": True, "data": nums})
+
+@app.route('/api/public/user/<uid>', methods=['GET'])
+def api_public_user(uid):
+    if uid not in users:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    return jsonify({"success": True, "balance": balance.get(uid, 0), "username": users[uid].get("username", "")})
+
+@app.route('/api/public/orders/<uid>', methods=['GET'])
+def api_public_orders(uid):
+    user_orders = [o for o in orders if str(o.get('user_id')) == str(uid)]
+    return jsonify({"success": True, "data": user_orders})
+
+@app.route('/api/public/buy', methods=['POST'])
+def api_public_buy():
+    data = request.get_json()
+    uid = str(data.get('user_id', ''))
+    item_id = str(data.get('item_id', ''))
+    item_name = data.get('item_name', '')
+    price = data.get('price', 0)
+    if not uid or not item_id:
+        return jsonify({"success": False, "message": "بيانات ناقصة"}), 400
+    if uid not in users:
+        return jsonify({"success": False, "message": "المستخدم غير موجود"}), 404
+    try:
+        price = float(price)
+    except:
+        return jsonify({"success": False, "message": "سعر غير صحيح"}), 400
+    if balance.get(uid, 0) < price:
+        return jsonify({"success": False, "message": "رصيدك غير كافٍ، قم بشحن رصيدك أولاً"}), 400
+    new_order = {
+        "id": str(uuid.uuid4()),
+        "user_id": uid,
+        "username": users[uid].get("username", ""),
+        "item_name": item_name,
+        "price": price,
+        "game_id": "",
+        "status": "قيد الانتظار",
+        "created_at": (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat()
+    }
+    orders.append(new_order)
+    save_json(ORDERS_FILE, orders)
+    return jsonify({"success": True})
+
+@app.route('/api/public/recharge', methods=['POST'])
+def api_public_recharge():
+    data = request.get_json()
+    uid = str(data.get('user_id', ''))
+    trans_id = str(data.get('transaction_id', '')).strip()
+    if not uid or not trans_id:
+        return jsonify({"success": False, "message": "بيانات ناقصة"}), 400
+    if uid not in users:
+        return jsonify({"success": False, "message": "المستخدم غير موجود"}), 404
+    if not trans_id.isdigit():
+        return jsonify({"success": False, "message": "رقم العملية يجب أن يكون أرقاماً فقط"}), 400
+    new_order = {
+        "id": str(uuid.uuid4()),
+        "user_id": uid,
+        "username": users[uid].get("username", ""),
+        "item_name": f"شحن رصيد ({trans_id})",
+        "price": 0,
+        "game_id": trans_id,
+        "status": "قيد الانتظار",
+        "created_at": (datetime.datetime.now() + datetime.timedelta(hours=3)).isoformat()
+    }
+    orders.append(new_order)
+    save_json(ORDERS_FILE, orders)
+    return jsonify({"success": True})
 
 # --- Webhook endpoint لـ Render ---
 @app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
