@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>القائمة الرئيسية</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  min-height: 100vh;
+  background: var(--tg-theme-bg-color, #f0f0f0);
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  direction: rtl;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== MAIN MENU BUTTONS ===== */
+.menu-btn {
+  width: 100%;
+  padding: 18px 20px;
+  border: none;
+  border-radius: 18px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.15s, filter 0.15s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  letter-spacing: 0.3px;
+}
+.menu-btn:active { transform: scale(0.97); filter: brightness(0.92); }
+
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-green  { background: #4caf50; }
+.btn-blue   { background: #42a5f5; }
+.btn-red    { background: #ef5350; }
+.btn-orange { background: #ff7043; }
+.btn-purple { background: #ab47bc; }
+
+/* ===== SUB PAGES ===== */
+.page { display: none; flex-direction: column; min-height: 100vh; }
+.page.active { display: flex; }
+
+.page-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0 18px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  margin-bottom: 16px;
+}
+.back-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(0,0,0,0.08); border: none; cursor: pointer;
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  color: #333; transition: background 0.15s;
+}
+.back-btn:active { background: rgba(0,0,0,0.15); }
+.page-title { font-size: 1.1rem; font-weight: 900; color: #1a1a1a; }
+
+/* ===== GOODS ===== */
+.goods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.good-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.good-name { font-size: 0.9rem; font-weight: 800; color: #1a1a1a; line-height: 1.3; }
+.good-desc { font-size: 0.72rem; color: #888; line-height: 1.4; }
+.good-price { font-size: 1rem; font-weight: 900; color: #1a6640; }
+.good-price span { font-size: 0.7rem; font-weight: 600; color: #888; }
+.buy-btn {
+  margin-top: auto; padding: 10px 0;
+  border-radius: 12px; border: none; cursor: pointer;
+  background: #4caf50; color: #fff;
+  font-size: 0.85rem; font-weight: 800;
+  transition: filter 0.15s;
+}
+.buy-btn:active { filter: brightness(0.88); }
+.skel { border-radius: 12px; background: linear-gradient(90deg,#e0e0e0 25%,#f0f0f0 50%,#e0e0e0 75%); background-size:200% 100%; animation: shim 1.1s infinite; }
+.skel-card { height: 155px; border-radius: 16px; }
+@keyframes shim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ===== BALANCE ===== */
+.balance-card {
+  background: #fff; border-radius: 20px;
+  padding: 32px 20px; text-align: center;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  margin-bottom: 14px;
+}
+.balance-num { font-size: 2.6rem; font-weight: 900; color: #1a6640; }
+.balance-lbl { font-size: 0.85rem; color: #888; margin-top: 6px; }
+
+/* ===== RECHARGE ===== */
+.info-card {
+  background: #fff; border-radius: 18px;
+  padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  margin-bottom: 12px;
+}
+.step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.step-n {
+  min-width: 28px; height: 28px; border-radius: 50%;
+  background: #4caf50; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; font-weight: 900;
+}
+.step-t { font-size: 0.88rem; line-height: 1.5; color: #333; }
+.dep-num {
+  background: #f1f8f1; border: 1.5px solid #4caf50;
+  border-radius: 12px; padding: 12px 16px;
+  font-size: 1rem; font-weight: 900; letter-spacing: 1px;
+  color: #1a6640; font-family: monospace;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.copy-btn {
+  background: #4caf5022; border: 1px solid #4caf50;
+  color: #1a6640; padding: 4px 12px;
+  border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 700;
+}
+.input-field {
+  width: 100%; background: #f5f5f5; border: 1.5px solid #ddd;
+  color: #1a1a1a; border-radius: 14px; padding: 14px 16px;
+  font-size: 1rem; font-weight: 700; outline: none; margin: 10px 0;
+  transition: border-color 0.2s; text-align: center;
+  font-family: monospace; letter-spacing: 1px;
+}
+.input-field:focus { border-color: #4caf50; }
+.submit-btn {
+  width: 100%; padding: 15px; border-radius: 14px; border: none;
+  background: #4caf50; color: #fff;
+  font-size: 1rem; font-weight: 900; cursor: pointer;
+  transition: filter 0.15s;
+}
+.submit-btn:active { filter: brightness(0.9); }
+.submit-btn:disabled { opacity: 0.55; }
+
+/* ===== ORDERS ===== */
+.order-item {
+  background: #fff; border-radius: 14px;
+  padding: 14px 16px; margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.order-name { font-size: 0.9rem; font-weight: 700; color: #1a1a1a; }
+.order-date { font-size: 0.72rem; color: #888; margin-top: 3px; }
+.badge { padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; }
+.b-pending  { background:#fff8e1; color:#f59f00; }
+.b-done     { background:#e8f5e9; color:#2e7d32; }
+.b-rejected { background:#ffebee; color:#c62828; }
+
+/* ===== SUPPORT ===== */
+.support-card {
+  background: #fff; border-radius: 20px;
+  padding: 32px 20px; text-align: center;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  margin-bottom: 12px;
+}
+.support-icon { font-size: 3.5rem; margin-bottom: 12px; }
+.support-handle {
+  display: inline-block; background: #f3f0ff;
+  border: 1.5px solid #ab47bc; border-radius: 12px;
+  padding: 10px 22px; font-size: 1.05rem; font-weight: 900;
+  color: #7b1fa2; margin: 12px 0; font-family: monospace;
+  cursor: pointer; letter-spacing: 0.5px;
+}
+
+/* ===== EMPTY ===== */
+.empty { text-align: center; padding: 40px 20px; color: #aaa; }
+.empty .ei { font-size: 3rem; margin-bottom: 10px; }
+.empty .et { font-size: 0.9rem; }
+
+/* ===== TOAST ===== */
+.toast-box {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; border-radius: 12px;
+  padding: 11px 24px; font-size: 0.88rem; font-weight: 700;
+  z-index: 9999; opacity: 0; transition: opacity .25s;
+  white-space: nowrap; pointer-events: none;
+}
+.toast-box.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="p-home">
+  <button class="menu-btn btn-green" onclick="go('games')">
+    🎮 الألعاب
+  </button>
+  <div class="row-2">
+    <button class="menu-btn btn-blue" onclick="go('recharge')">
+      🏦 شحن رصيد
+    </button>
+    <button class="menu-btn btn-blue" onclick="go('account')">
+      📦 معلومات حسابي
+    </button>
+  </div>
+  <button class="menu-btn btn-red" onclick="go('support')">
+    💬 الدعم الفني
+  </button>
+</div>
+
+<!-- ===== GAMES / GOODS PAGE ===== -->
+<div class="page" id="p-games">
+  <div class="page-header">
+    <button class="back-btn" onclick="goHome()">&#8592;</button>
+    <div class="page-title">🎮 الألعاب</div>
+  </div>
+  <div class="goods-grid" id="goodsGrid">
+    <div class="skel skel-card"></div>
+    <div class="skel skel-card"></div>
+    <div class="skel skel-card"></div>
+    <div class="skel skel-card"></div>
+  </div>
+</div>
+
+<!-- ===== RECHARGE PAGE ===== -->
+<div class="page" id="p-recharge">
+  <div class="page-header">
+    <button class="back-btn" onclick="goHome()">&#8592;</button>
+    <div class="page-title">🏦 شحن رصيد</div>
+  </div>
+  <div class="info-card">
+    <div class="step"><div class="step-n">1</div><div class="step-t">افتح تطبيق <b>سيرتيل كاش</b> واختر التحويل اليدوي</div></div>
+    <div class="step"><div class="step-n">2</div><div class="step-t">حوّل المبلغ لأحد الأرقام:</div></div>
+    <div id="depNums"><div class="skel" style="height:48px;border-radius:12px;"></div></div>
+    <div class="step" style="margin-top:14px;"><div class="step-n">3</div><div class="step-t">أرسل رقم العملية أدناه بعد التحويل</div></div>
+    <input class="input-field" id="transInput" type="tel" inputmode="numeric" placeholder="رقم العملية (أرقام فقط)">
+    <button class="submit-btn" id="sendBtn" onclick="submitRecharge()">إرسال رقم العملية</button>
+  </div>
+</div>
+
+<!-- ===== ACCOUNT PAGE ===== -->
+<div class="page" id="p-account">
+  <div class="page-header">
+    <button class="back-btn" onclick="goHome()">&#8592;</button>
+    <div class="page-title">📦 معلومات حسابي</div>
+  </div>
+  <div class="balance-card">
+    <div class="balance-num" id="balNum">—</div>
+    <div class="balance-lbl">رصيدك الحالي بالليرة السورية</div>
+  </div>
+  <div style="font-size:0.95rem;font-weight:800;color:#333;margin-bottom:10px;">📋 آخر الطلبات</div>
+  <div id="ordersList"><div class="empty"><div class="ei">⏳</div><div class="et">جاري التحميل...</div></div></div>
+</div>
+
+<!-- ===== SUPPORT PAGE ===== -->
+<div class="page" id="p-support">
+  <div class="page-header">
+    <button class="back-btn" onclick="goHome()">&#8592;</button>
+    <div class="page-title">💬 الدعم الفني</div>
+  </div>
+  <div class="support-card">
+    <div class="support-icon">👨‍💻</div>
+    <div style="font-size:1rem;font-weight:800;color:#333;margin-bottom:6px;">للدعم والاستفسارات تواصل معنا</div>
+    <div class="support-handle" onclick="openSupport()">@mhama1kjokbi</div>
+    <div style="font-size:0.8rem;color:#888;margin-top:8px;">اضغط للتواصل المباشر</div>
+  </div>
+  <div class="info-card" style="text-align:center;">
+    <div style="font-size:0.85rem;color:#555;line-height:1.8;">
+      أوقات الدعم: يومياً 9 صباحاً – 11 مساءً<br>
+      <b style="color:#333;">سيتم الرد في أقرب وقت</b>
+    </div>
+  </div>
+</div>
+
+<div class="toast-box" id="toast"></div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+const user = tg.initDataUnsafe?.user || {};
+const uid  = user.id ? String(user.id) : null;
+
+let goodsCache = null;
+
+// Preload on open
+prefetchGoods();
+prefetchDeposit();
+
+function prefetchGoods() {
+  fetch('/api/public/goods').then(r=>r.json()).then(d=>{ if(d.success) goodsCache=d.data; }).catch(()=>{});
+}
+function prefetchDeposit() {
+  fetch('/api/public/deposit-numbers').then(r=>r.json()).then(d=>{
+    if(d.success && d.data.length) {
+      document.getElementById('depNums').innerHTML = d.data.map(n=>`
+        <div class="dep-num"><span>${n}</span><button class="copy-btn" onclick="copyNum('${n}')">نسخ</button></div>
+      `).join('');
+    }
+  }).catch(()=>{});
+}
+
+function go(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('p-'+page).classList.add('active');
+  if(page==='games')   loadGoods();
+  if(page==='account') loadAccount();
+}
+function goHome() {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('p-home').classList.add('active');
+}
+
+// GOODS
+function loadGoods() {
+  if(goodsCache) { renderGoods(goodsCache); return; }
+  document.getElementById('goodsGrid').innerHTML='<div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div>';
+  fetch('/api/public/goods').then(r=>r.json()).then(d=>{
+    if(d.success){ goodsCache=d.data; renderGoods(d.data); }
+    else showEmpty('goodsGrid','لا توجد سلع متاحة');
+  }).catch(()=>showEmpty('goodsGrid','خطأ في التحميل'));
+}
+function renderGoods(items) {
+  if(!items||!items.length){ showEmpty('goodsGrid','لا توجد سلع متاحة'); return; }
+  document.getElementById('goodsGrid').innerHTML = items.map(g=>`
+    <div class="good-card">
+      <div class="good-name">${esc(g.name)}</div>
+      ${g.description?`<div class="good-desc">${esc(g.description)}</div>`:''}
+      <div class="good-price">${Number(g.price).toLocaleString('ar')} <span>ل.س</span></div>
+      <button class="buy-btn" onclick="buyItem('${esc(g.id)}','${esc(g.name)}',${g.price},this)">شراء الآن</button>
+    </div>
+  `).join('');
+}
+function buyItem(id,name,price,btn) {
+  if(!uid){ showToast('⚠️ لم يتم التعرف على هويتك'); return; }
+  if(!confirm(`شراء: ${name}\nالسعر: ${Number(price).toLocaleString('ar')} ل.س\n\nتأكيد؟`)) return;
+  btn.disabled=true; btn.textContent='جاري...';
+  fetch('/api/public/buy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:uid,item_id:id,item_name:name,price:price})})
+  .then(r=>r.json()).then(d=>{
+    if(d.success){showToast('✅ تم إرسال طلبك'); btn.textContent='✅ تم';}
+    else{showToast('⚠️'+(d.message||'فشل'));btn.disabled=false;btn.textContent='شراء الآن';}
+  }).catch(()=>{showToast('❌ خطأ');btn.disabled=false;btn.textContent='شراء الآن';});
+}
+
+// ACCOUNT
+function loadAccount() {
+  if(!uid){ document.getElementById('balNum').textContent='—'; return; }
+  fetch('/api/public/user/'+uid).then(r=>r.json()).then(d=>{
+    if(d.success) document.getElementById('balNum').textContent=Number(d.balance).toLocaleString('ar')+' ل.س';
+  }).catch(()=>{});
+  fetch('/api/public/orders/'+uid).then(r=>r.json()).then(d=>{
+    if(!d.success||!d.data.length){
+      document.getElementById('ordersList').innerHTML='<div class="empty"><div class="ei">📭</div><div class="et">لا توجد طلبات بعد</div></div>';return;
+    }
+    document.getElementById('ordersList').innerHTML=d.data.slice().reverse().slice(0,10).map(o=>`
+      <div class="order-item">
+        <div><div class="order-name">${esc(o.item_name)}</div><div class="order-date">${(o.created_at||'').slice(0,10)} · ${Number(o.price||0).toLocaleString('ar')} ل.س</div></div>
+        <span class="badge ${bc(o.status)}">${o.status}</span>
+      </div>
+    `).join('');
+  }).catch(()=>{});
+}
+function bc(s){ return s==='مكتمل'?'b-done':s==='مرفوض'?'b-rejected':'b-pending'; }
+
+// RECHARGE
+function submitRecharge() {
+  if(!uid){ showToast('⚠️ لم يتم التعرف على هويتك'); return; }
+  const t = document.getElementById('transInput').value.trim();
+  if(!t||!/^\d+$/.test(t)){ showToast('⚠️ أدخل رقم العملية بشكل صحيح'); return; }
+  const btn=document.getElementById('sendBtn');
+  btn.disabled=true; btn.textContent='جاري الإرسال...';
+  fetch('/api/public/recharge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:uid,transaction_id:t})})
+  .then(r=>r.json()).then(d=>{
+    if(d.success){showToast('✅ تم إرسال طلب الشحن');document.getElementById('transInput').value='';btn.textContent='✅ تم الإرسال';setTimeout(()=>{btn.disabled=false;btn.textContent='إرسال رقم العملية';},3000);}
+    else{showToast('⚠️'+(d.message||'فشل'));btn.disabled=false;btn.textContent='إرسال رقم العملية';}
+  }).catch(()=>{showToast('❌ خطأ');btn.disabled=false;btn.textContent='إرسال رقم العملية';});
+}
+
+// SUPPORT
+function openSupport(){ tg.openTelegramLink('https://t.me/mhama1kjokbi'); }
+
+// HELPERS
+function copyNum(n){ navigator.clipboard.writeText(n).then(()=>showToast('✅ تم النسخ')).catch(()=>{}); }
+function showEmpty(id,msg){ document.getElementById(id).innerHTML=`<div class="empty" style="grid-column:span 2"><div class="ei">📭</div><div class="et">${msg}</div></div>`; }
+function showToast(msg,d=2800){ const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
