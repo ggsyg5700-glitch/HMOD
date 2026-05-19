@@ -1,11 +1,17 @@
 :root {
-    --bg-primary: #111111;
-    --bg-secondary: #181818;
-    --bg-card: #1e1e1e;
-    --text-primary: #f0f0f0;
-    --text-secondary: #cccccc;
-    --accent: #00d2ff;
-    --border: #3a3a3a;
+    --bg-primary: #0d0f14;
+    --bg-secondary: #12151c;
+    --bg-card: #181c25;
+    --text-primary: #eaf0fb;
+    --text-secondary: #8892a4;
+    --accent: #4f8ef7;
+    --accent-glow: rgba(79, 142, 247, 0.18);
+    --border: #232a38;
+    --border-light: #2e3848;
+    --green: #22c97a;
+    --yellow: #f5c842;
+    --red: #f75f5f;
+    --cyan: #22d4e0;
 }
 
 html, body {
@@ -24,28 +30,22 @@ body {
 
 .content-section {
     padding: 25px;
-    background: #1a1a1a; /* لون أوضح قليلاً من الخلفية الأساسية */
+    background: var(--bg-secondary);
     border-radius: 20px;
-    border: 1px solid #333;
+    border: 1px solid var(--border);
     min-height: 500px;
     margin-top: 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    display: none; /* يتم التحكم به عبر JS */
+    display: none;
 }
 
-#status-section { display: block; } /* القسم الافتراضي */
+#status-section { display: block; }
 
 .hidden { display: none !important; }
 
-/* إصلاح التداخل في الشاشات الصغيرة */
 @media (max-width: 768px) {
-    .main-content {
-        padding: 15px;
-    }
-    .content-section {
-        padding: 15px;
-        min-height: auto;
-    }
+    .main-content { padding: 15px; }
+    .content-section { padding: 15px; min-height: auto; }
 }
 
 @keyframes fadeIn {
@@ -53,37 +53,67 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
-}
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
+.section-fade { animation: fadeIn 0.6s ease-out forwards; }
 
-.section-fade {
-    animation: fadeIn 0.6s ease-out forwards;
-}
-
+/* ======== السايدبار ======== */
 .sidebar {
     background: var(--bg-secondary);
     min-height: 100vh;
     border-left: 1px solid var(--border);
 }
 
-.main-content {
-    padding: 30px;
-}
+.main-content { padding: 30px; }
 
+/* ======== بطاقات الإحصاء الأربعة ======== */
 .stat-card {
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
     border-radius: 20px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* بطاقة 1 - وقت التشغيل - أزرق */
+.col-md-3:nth-child(1) .stat-card,
+.col-sm-6:nth-child(1) .stat-card {
+    border-top: 3px solid var(--accent) !important;
+    background: linear-gradient(160deg, #1a2540 0%, var(--bg-card) 55%) !important;
+}
+
+/* بطاقة 2 - الحسابات - أخضر */
+.col-md-3:nth-child(2) .stat-card,
+.col-sm-6:nth-child(2) .stat-card {
+    border-top: 3px solid var(--green) !important;
+    background: linear-gradient(160deg, #0f2a1a 0%, var(--bg-card) 55%) !important;
+}
+
+/* بطاقة 3 - المالية - ذهبي */
+.col-md-3:nth-child(3) .stat-card,
+.col-sm-6:nth-child(3) .stat-card {
+    border-top: 3px solid var(--yellow) !important;
+    background: linear-gradient(160deg, #2a2210 0%, var(--bg-card) 55%) !important;
+}
+
+/* بطاقة 4 - الطلبات - أحمر */
+.col-md-3:nth-child(4) .stat-card,
+.col-sm-6:nth-child(4) .stat-card {
+    border-top: 3px solid var(--red) !important;
+    background: linear-gradient(160deg, #2a1010 0%, var(--bg-card) 55%) !important;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    border-color: var(--accent) !important;
-    box-shadow: 0 10px 25px rgba(0, 210, 255, 0.1);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.4);
 }
 
+.col-md-3:nth-child(1) .stat-card:hover { border-color: var(--accent) !important; box-shadow: 0 12px 28px rgba(79,142,247,0.2); }
+.col-md-3:nth-child(2) .stat-card:hover { border-color: var(--green) !important; box-shadow: 0 12px 28px rgba(34,201,122,0.2); }
+.col-md-3:nth-child(3) .stat-card:hover { border-color: var(--yellow) !important; box-shadow: 0 12px 28px rgba(245,200,66,0.2); }
+.col-md-3:nth-child(4) .stat-card:hover { border-color: var(--red) !important; box-shadow: 0 12px 28px rgba(247,95,95,0.2); }
+
+/* ======== بطاقة pending ======== */
 .pending-card {
     border-radius: 15px;
     background: var(--bg-card) !important;
@@ -95,10 +125,12 @@ body {
 .pending-card:hover {
     border-color: var(--accent) !important;
     transform: scale(1.01);
+    box-shadow: 0 6px 20px rgba(79,142,247,0.12);
 }
 
+/* ======== السايدبار - روابط ======== */
 .nav-link {
-    color: #888 !important;
+    color: var(--text-secondary) !important;
     padding: 12px 20px !important;
     border-radius: 12px !important;
     margin-bottom: 8px !important;
@@ -108,12 +140,20 @@ body {
     font-weight: 700 !important;
 }
 
-.nav-link:hover, .nav-link.active {
-    background: var(--accent) !important;
-    color: white !important;
+.nav-link:hover {
+    background: var(--accent-glow) !important;
+    color: var(--accent) !important;
     transform: translateX(-5px);
 }
 
+.nav-link.active {
+    background: linear-gradient(90deg, #1a3a6e 0%, rgba(79,142,247,0.1) 100%) !important;
+    color: var(--accent) !important;
+    border-right: 3px solid var(--accent);
+    transform: translateX(-5px);
+}
+
+/* ======== إضاءة ======== */
 .animate-pulse {
     animation: pulse 2s infinite ease-in-out;
 }
@@ -124,31 +164,32 @@ body {
     100% { opacity: 1; transform: scale(1); }
 }
 
+/* ======== Toast ======== */
 .toast {
-    background: #1a1a1a !important;
-    border: 1px solid var(--border) !important;
+    background: #1a2035 !important;
+    border: 1px solid var(--border-light) !important;
     border-radius: 12px !important;
     backdrop-filter: blur(10px);
 }
 
+/* ======== Bootstrap overrides ======== */
 .btn-primary {
-    background: var(--accent) !important;
+    background: linear-gradient(135deg, #3a7bd5, #4f8ef7) !important;
     border: none !important;
+    box-shadow: 0 4px 14px rgba(79,142,247,0.25);
 }
 
-.bg-dark { background-color: #1e1e1e !important; }
-.bg-secondary { background-color: #262626 !important; }
+.bg-dark { background-color: var(--bg-card) !important; }
+.bg-secondary { background-color: #1e2637 !important; }
 
-/* تمركز شاشة تسجيل الدخول */
+/* ======== شاشة تسجيل الدخول ======== */
 #auth-screen {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     align-items: center;
     justify-content: center;
-    background: var(--bg-primary);
+    background: radial-gradient(ellipse at 60% 40%, #151b2e 0%, var(--bg-primary) 80%);
     z-index: 9999;
 }
 
@@ -156,9 +197,9 @@ body {
     width: 100%;
     max-width: 420px;
     background: var(--bg-card) !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--border-light) !important;
     border-radius: 20px !important;
-    box-shadow: 0 20px 60px rgba(0, 210, 255, 0.08) !important;
+    box-shadow: 0 20px 60px rgba(79, 210, 255, 0.08) !important;
 }
 
 .text-accent { color: var(--accent) !important; }
