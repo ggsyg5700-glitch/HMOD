@@ -194,15 +194,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_json(BALANCE_FILE, balance)
     
     is_admin = users.get(uid, {}).get("role") == "admin" or str(uid) == str(ADMIN_ID)
-    webapp_user_url = WEBAPP_URL + "webapp" if WEBAPP_URL else ""
     keyboard = [
-        [KeyboardButton("🎮 القائمة الرئيسية", web_app=WebAppInfo(url=webapp_user_url))] if webapp_user_url else [],
         [KeyboardButton("🛍️ السلع"), KeyboardButton("💰 رصيدي")],
         [KeyboardButton("📦 طلباتي"), KeyboardButton("➕ شحن رصيد")],
         [KeyboardButton("⚙️ الإعدادات"), KeyboardButton("👨‍💻 الدعم")],
         [KeyboardButton("🏁 Start")]
     ]
-    keyboard = [row for row in keyboard if row]
     if is_admin:
         keyboard.append([KeyboardButton("📊 لوحة الإدارة", web_app=WebAppInfo(url=WEBAPP_URL))])
 
@@ -1073,6 +1070,17 @@ def api_public_orders(uid):
     user_orders = [o for o in orders if str(o.get('user_id')) == str(uid)]
     return jsonify({"success": True, "data": user_orders})
 
+def _notify_admin_bg(msg):
+    """إرسال إشعار للأدمن في الخلفية بدون تأخير الرد"""
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+            json={"chat_id": ADMIN_ID, "text": msg, "parse_mode": "Markdown"},
+            timeout=8
+        )
+    except:
+        pass
+
 @app.route('/api/public/buy', methods=['POST'])
 def api_public_buy():
     data = request.get_json()
@@ -1090,10 +1098,11 @@ def api_public_buy():
         return jsonify({"success": False, "message": "سعر غير صحيح"}), 400
     if balance.get(uid, 0) < price:
         return jsonify({"success": False, "message": "رصيدك غير كافٍ، قم بشحن رصيدك أولاً"}), 400
+    uname = users[uid].get("username", uid)
     new_order = {
         "id": str(uuid.uuid4()),
         "user_id": uid,
-        "username": users[uid].get("username", ""),
+        "username": uname,
         "item_name": item_name,
         "price": price,
         "game_id": "",
@@ -1102,6 +1111,17 @@ def api_public_buy():
     }
     orders.append(new_order)
     save_json(ORDERS_FILE, orders)
+    msg = (
+        f"🛒 *طلب شراء جديد - WebApp*\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"👤 الزبون: @{uname}\n"
+        f"📦 السلعة: {item_name}\n"
+        f"💰 السعر: {int(price)} ل.س\n"
+        f"🆔 الطلب: `{new_order['id'][:8]}`\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"⏳ بانتظار موافقتك من لوحة الإدارة"
+    )
+    Thread(target=_notify_admin_bg, args=(msg,), daemon=True).start()
     return jsonify({"success": True})
 
 @app.route('/api/public/recharge', methods=['POST'])
@@ -1115,10 +1135,11 @@ def api_public_recharge():
         return jsonify({"success": False, "message": "المستخدم غير موجود"}), 404
     if not trans_id.isdigit():
         return jsonify({"success": False, "message": "رقم العملية يجب أن يكون أرقاماً فقط"}), 400
+    uname = users[uid].get("username", uid)
     new_order = {
         "id": str(uuid.uuid4()),
         "user_id": uid,
-        "username": users[uid].get("username", ""),
+        "username": uname,
         "item_name": f"شحن رصيد ({trans_id})",
         "price": 0,
         "game_id": trans_id,
@@ -1127,6 +1148,16 @@ def api_public_recharge():
     }
     orders.append(new_order)
     save_json(ORDERS_FILE, orders)
+    msg = (
+        f"💳 *طلب شحن رصيد جديد - WebApp*\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"👤 الزبون: @{uname}\n"
+        f"🧾 رقم العملية: `{trans_id}`\n"
+        f"🆔 الطلب: `{new_order['id'][:8]}`\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"⏳ بانتظار موافقتك من لوحة الإدارة"
+    )
+    Thread(target=_notify_admin_bg, args=(msg,), daemon=True).start()
     return jsonify({"success": True})
 
 # --- Webhook endpoint لـ Render ---

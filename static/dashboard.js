@@ -42,8 +42,10 @@ window.showToast = function(message, type = 'success') {
     }, 4000);
 };
 
-window.apiCall = async function(url, method = 'GET', body = null) {
+window.apiCall = async function(url, method = 'GET', body = null, timeoutMs = 12000) {
     const token = localStorage.getItem('admin_token');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
         const res = await fetch(url, {
             method,
@@ -51,9 +53,10 @@ window.apiCall = async function(url, method = 'GET', body = null) {
                 'Content-Type': 'application/json',
                 'Authorization': token || ''
             },
-            body: body ? JSON.stringify(body) : null
+            body: body ? JSON.stringify(body) : null,
+            signal: controller.signal
         });
-        
+        clearTimeout(timer);
         if (res.status === 403 || res.status === 401) {
             localStorage.removeItem('admin_token');
             const authScreen = document.getElementById('auth-screen');
@@ -62,10 +65,14 @@ window.apiCall = async function(url, method = 'GET', body = null) {
             if (mainApp) mainApp.style.display = 'none';
             return { success: false };
         }
-        
         return await res.json();
     } catch (e) {
-        console.error('API Call failed:', e);
+        clearTimeout(timer);
+        if (e.name === 'AbortError') {
+            window.showToast('انتهت مهلة الاتصال، يرجى المحاولة مجدداً', 'danger');
+        } else {
+            console.error('API Call failed:', e);
+        }
         return { success: false };
     }
 };
