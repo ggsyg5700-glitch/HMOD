@@ -194,15 +194,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_json(BALANCE_FILE, balance)
     
     is_admin = users.get(uid, {}).get("role") == "admin" or str(uid) == str(ADMIN_ID)
-    webapp_user_url = WEBAPP_URL + "webapp" if WEBAPP_URL else ""
     keyboard = [
-        [KeyboardButton("🎮 فتح المتجر", web_app=WebAppInfo(url=webapp_user_url))] if webapp_user_url else [],
         [KeyboardButton("🛍️ السلع"), KeyboardButton("💰 رصيدي")],
         [KeyboardButton("📦 طلباتي"), KeyboardButton("➕ شحن رصيد")],
         [KeyboardButton("⚙️ الإعدادات"), KeyboardButton("👨‍💻 الدعم")],
         [KeyboardButton("🏁 Start")]
     ]
-    keyboard = [row for row in keyboard if row]
     if is_admin:
         keyboard.append([KeyboardButton("📊 لوحة الإدارة", web_app=WebAppInfo(url=WEBAPP_URL))])
 
