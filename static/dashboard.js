@@ -1,3 +1,5 @@
+const API_BASE = 'https://hmod-dbl8.onrender.com';
+
 // دالة موحدة لفتح مودال المنتج
 function openProductModal(item) {
     const titleEl  = document.getElementById('productModalTitle');
@@ -46,8 +48,9 @@ window.apiCall = async function(url, method = 'GET', body = null, timeoutMs = 12
     const token = localStorage.getItem('admin_token');
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const fullUrl = url.startsWith('http') ? url : API_BASE + url;
     try {
-        const res = await fetch(url, {
+        const res = await fetch(fullUrl, {
             method,
             headers: {
                 'Content-Type': 'application/json',
