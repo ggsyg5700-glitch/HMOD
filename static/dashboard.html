@@ -141,42 +141,50 @@
                         var uiLabel = document.getElementById('ui-host-label');
                         var apiLabel = document.getElementById('api-host-label');
 
-                        // كشف مصدر الواجهة
-                        if (host.indexOf('pages.dev') !== -1) {
-                            uiLabel.textContent = 'Cloudflare Pages (' + host + ')';
-                            uiLabel.style.color = '#f48120';
-                        } else if (host.indexOf('onrender.com') !== -1) {
-                            uiLabel.textContent = 'Render (' + host + ')';
-                            uiLabel.style.color = '#46e3a0';
-                        } else if (host.indexOf('replit') !== -1 || host.indexOf('repl.co') !== -1 || host.indexOf('repl.dev') !== -1 || host.indexOf('picard') !== -1 || host.indexOf('janeway') !== -1) {
-                            uiLabel.textContent = 'Replit (' + host + ')';
-                            uiLabel.style.color = '#7c3aed';
-                        } else if (host === 'localhost' || host === '127.0.0.1') {
-                            uiLabel.textContent = 'Local / تطوير (' + host + ')';
-                            uiLabel.style.color = '#aaa';
-                        } else {
-                            uiLabel.textContent = host;
-                            uiLabel.style.color = '#ccc';
+                        // دالة لكشف اسم المزود من الدومين
+                        function detectProvider(h) {
+                            if (!h || h === '') return { name: 'غير معروف', color: '#888' };
+                            var d = h.replace('https://','').replace('http://','').split('/')[0];
+                            if (d.indexOf('pages.dev') !== -1 || d.indexOf('cloudflare') !== -1)
+                                return { name: 'Cloudflare Pages', host: d, color: '#f48120' };
+                            if (d.indexOf('onrender.com') !== -1)
+                                return { name: 'Render', host: d, color: '#46e3a0' };
+                            if (d.indexOf('replit') !== -1 || d.indexOf('repl.co') !== -1 || d.indexOf('repl.dev') !== -1 || d.indexOf('picard') !== -1 || d.indexOf('janeway') !== -1 || d.indexOf('pike') !== -1)
+                                return { name: 'Replit', host: d, color: '#7c3aed' };
+                            if (d.indexOf('vercel.app') !== -1)
+                                return { name: 'Vercel', host: d, color: '#fff' };
+                            if (d.indexOf('netlify.app') !== -1)
+                                return { name: 'Netlify', host: d, color: '#00c7b7' };
+                            if (d.indexOf('railway.app') !== -1)
+                                return { name: 'Railway', host: d, color: '#9b59b6' };
+                            if (d.indexOf('fly.dev') !== -1 || d.indexOf('fly.io') !== -1)
+                                return { name: 'Fly.io', host: d, color: '#6c63ff' };
+                            if (d.indexOf('github.io') !== -1)
+                                return { name: 'GitHub Pages', host: d, color: '#fff' };
+                            if (d.indexOf('heroku') !== -1 || d.indexOf('herokuapp.com') !== -1)
+                                return { name: 'Heroku', host: d, color: '#79589f' };
+                            if (d === 'localhost' || d === '127.0.0.1')
+                                return { name: 'Local / تطوير', host: d, color: '#aaa' };
+                            // أي دومين آخر — يظهر كما هو باحترافية
+                            return { name: d, host: d, color: '#64b5f6' };
                         }
+
+                        // كشف مصدر الواجهة
+                        var uiInfo = detectProvider(host);
+                        uiLabel.style.color = uiInfo.color;
+                        uiLabel.textContent = uiInfo.host ? uiInfo.name + ' (' + uiInfo.host + ')' : uiInfo.name;
 
                         // كشف مصدر API — بعد تحميل dashboard.js
                         var apiBase = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : '';
-                        if (apiBase.indexOf('onrender.com') !== -1) {
-                            var apiHost = apiBase.replace('https://','').replace('http://','');
-                            apiLabel.textContent = 'Render (' + apiHost + ')';
-                            apiLabel.style.color = '#46e3a0';
-                        } else if (apiBase.indexOf('pages.dev') !== -1) {
-                            apiLabel.textContent = 'Cloudflare Pages (' + apiBase.replace('https://','').replace('http://','') + ')';
-                            apiLabel.style.color = '#f48120';
-                        } else if (apiBase.indexOf('replit') !== -1 || apiBase.indexOf('repl.co') !== -1 || apiBase.indexOf('repl.dev') !== -1) {
-                            apiLabel.textContent = 'Replit (' + apiBase.replace('https://','').replace('http://','') + ')';
-                            apiLabel.style.color = '#7c3aed';
-                        } else if (apiBase === '' || apiBase === window.location.origin || apiBase === window.location.host) {
-                            apiLabel.textContent = 'نفس الخادم (' + host + ')';
-                            apiLabel.style.color = '#aaa';
+                        var apiInfo;
+                        if (apiBase === '' || apiBase === window.location.origin) {
+                            apiInfo = detectProvider(host);
+                            apiLabel.style.color = apiInfo.color;
+                            apiLabel.textContent = 'نفس الخادم — ' + (apiInfo.host || apiInfo.name);
                         } else {
-                            apiLabel.textContent = apiBase.replace('https://','').replace('http://','');
-                            apiLabel.style.color = '#ccc';
+                            apiInfo = detectProvider(apiBase);
+                            apiLabel.style.color = apiInfo.color;
+                            apiLabel.textContent = apiInfo.host ? apiInfo.name + ' (' + apiInfo.host + ')' : apiInfo.name;
                         }
                     });
                     </script>
