@@ -80,6 +80,21 @@ window.apiCall = async function(url, method = 'GET', body = null, timeoutMs = 12
     }
 };
 
+// ======== دالة مشتركة لفتح الداشبورد بعد التحقق ========
+function openDashboard() {
+    const authScreen = document.getElementById('auth-screen');
+    const mainApp = document.getElementById('main-app');
+    const registerWrap = document.getElementById('register-biometric-wrap');
+    if (authScreen) authScreen.style.display = 'none';
+    if (mainApp) {
+        mainApp.style.display = 'block';
+        mainApp.classList.add('fade-in');
+    }
+    window.loadStatus();
+    // إخفاء زر حفظ البصمة داخل الداشبورد
+    if (registerWrap) registerWrap.style.display = 'none';
+}
+
 window.authenticateUser = async function() {
     const passwordInput = document.getElementById('password-input');
     if (!passwordInput) return;
@@ -87,19 +102,113 @@ window.authenticateUser = async function() {
     const res = await window.apiCall('/api/auth', 'POST', { password });
     if (res.success) {
         localStorage.setItem('admin_token', res.token);
-        const authScreen = document.getElementById('auth-screen');
-        const mainApp = document.getElementById('main-app');
-        if (authScreen) authScreen.style.display = 'none';
-        if (mainApp) {
-            mainApp.style.display = 'block';
-            mainApp.classList.add('fade-in');
-        }
-        window.loadStatus();
+        openDashboard();
         window.showToast("تم تسجيل الدخول بنجاح");
+        // عرض زر "حفظ البصمة" إذا المتصفح يدعمها ولم تُسجَّل بعد
+        if (window.PublicKeyCredential && !localStorage.getItem('biometric_registered')) {
+            const registerWrap = document.getElementById('register-biometric-wrap');
+            if (registerWrap) registerWrap.style.display = 'block';
+        }
     } else {
         window.showToast('كلمة المرور خاطئة!', 'danger');
     }
 };
+
+// ======== WebAuthn — تسجيل البصمة ========
+window.registerBiometric = async function() {
+    const statusEl = document.getElementById('biometric-status');
+    if (!window.PublicKeyCredential) {
+        window.showToast('جهازك لا يدعم البصمة', 'warning');
+        return;
+    }
+    try {
+        const challenge = new Uint8Array(32);
+        crypto.getRandomValues(challenge);
+        const credential = await navigator.credentials.create({
+            publicKey: {
+                challenge,
+                rp: { name: 'HMOD Admin', id: location.hostname },
+                user: {
+                    id: new TextEncoder().encode('hmod-admin'),
+                    name: 'admin',
+                    displayName: 'المدير'
+                },
+                pubKeyCredParams: [
+                    { type: 'public-key', alg: -7 },
+                    { type: 'public-key', alg: -257 }
+                ],
+                authenticatorSelection: {
+                    userVerification: 'required',
+                    residentKey: 'preferred'
+                },
+                timeout: 60000
+            }
+        });
+        // حفظ credentialId في localStorage
+        const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+        localStorage.setItem('biometric_registered', '1');
+        localStorage.setItem('biometric_cred_id', credId);
+        const registerWrap = document.getElementById('register-biometric-wrap');
+        if (registerWrap) registerWrap.style.display = 'none';
+        // إظهار زر البصمة في شاشة تسجيل الدخول
+        const bioBtn = document.getElementById('biometric-btn');
+        if (bioBtn) bioBtn.style.display = 'block';
+        window.showToast('تم حفظ البصمة بنجاح! 🎉', 'success');
+    } catch (e) {
+        if (e.name === 'NotAllowedError') {
+            window.showToast('تم إلغاء العملية', 'warning');
+        } else {
+            window.showToast('فشل تسجيل البصمة: ' + e.message, 'danger');
+        }
+    }
+};
+
+// ======== WebAuthn — دخول بالبصمة ========
+window.biometricLogin = async function() {
+    const statusEl = document.getElementById('biometric-status');
+    if (!window.PublicKeyCredential) return;
+    if (statusEl) statusEl.textContent = 'جاري التحقق...';
+    try {
+        const challenge = new Uint8Array(32);
+        crypto.getRandomValues(challenge);
+        const assertion = await navigator.credentials.get({
+            publicKey: {
+                challenge,
+                rpId: location.hostname,
+                userVerification: 'required',
+                timeout: 60000
+            }
+        });
+        if (assertion) {
+            // البصمة تحققت — نستخدم التوكن المحفوظ
+            const token = localStorage.getItem('admin_token');
+            if (token) {
+                if (statusEl) statusEl.textContent = '';
+                openDashboard();
+                window.showToast('تم الدخول بالبصمة ✅');
+            } else {
+                if (statusEl) statusEl.textContent = 'يجب تسجيل الدخول بكلمة السر مرة واحدة أولاً';
+            }
+        }
+    } catch (e) {
+        if (statusEl) statusEl.textContent = '';
+        if (e.name === 'NotAllowedError') {
+            window.showToast('تم إلغاء البصمة', 'warning');
+        } else {
+            window.showToast('فشل التحقق بالبصمة', 'danger');
+        }
+    }
+};
+
+// ======== تحقق عند التحميل: هل المتصفح يدعم البصمة؟ ========
+(function checkBiometricSupport() {
+    if (!window.PublicKeyCredential) return;
+    const isRegistered = localStorage.getItem('biometric_registered');
+    if (isRegistered) {
+        const bioBtn = document.getElementById('biometric-btn');
+        if (bioBtn) bioBtn.style.display = 'block';
+    }
+})();
 
 window.refreshSystem = async function() {
     const modalEl = document.getElementById('countdownModal');
