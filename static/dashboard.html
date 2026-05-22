@@ -129,10 +129,52 @@
                         </div>
                     </div>
 
-                    <!-- نص مصدر التشغيل -->
+                    <!-- نص مصدر التشغيل الفعلي -->
                     <div class="text-center mt-1 mb-4" style="font-size:0.78rem; color:#555; letter-spacing:0.3px;">
-                        واجهة: <span style="color:#f48120; font-weight:700;">Cloudflare Pages</span> &nbsp;|&nbsp; API: <span style="color:#46e3a0; font-weight:700;">Render</span>
+                        واجهة: <span id="ui-host-label" style="font-weight:700;">...</span>
+                        &nbsp;|&nbsp;
+                        API: <span id="api-host-label" style="font-weight:700;">...</span>
                     </div>
+                    <script>
+                    (function() {
+                        var host = window.location.hostname;
+                        var uiLabel = document.getElementById('ui-host-label');
+                        var apiLabel = document.getElementById('api-host-label');
+
+                        if (host.indexOf('pages.dev') !== -1) {
+                            uiLabel.textContent = 'Cloudflare Pages (' + host + ')';
+                            uiLabel.style.color = '#f48120';
+                        } else if (host.indexOf('onrender.com') !== -1) {
+                            uiLabel.textContent = 'Render (' + host + ')';
+                            uiLabel.style.color = '#46e3a0';
+                        } else if (host.indexOf('replit') !== -1 || host.indexOf('repl.co') !== -1) {
+                            uiLabel.textContent = 'Replit (' + host + ')';
+                            uiLabel.style.color = '#7c3aed';
+                        } else if (host === 'localhost' || host === '127.0.0.1') {
+                            uiLabel.textContent = 'Local (' + host + ')';
+                            uiLabel.style.color = '#aaa';
+                        } else {
+                            uiLabel.textContent = host;
+                            uiLabel.style.color = '#ccc';
+                        }
+
+                        var apiBase = (typeof API_BASE !== 'undefined') ? API_BASE : '';
+                        if (apiBase.indexOf('onrender.com') !== -1) {
+                            var apiHost = apiBase.replace('https://','').replace('http://','');
+                            apiLabel.textContent = 'Render (' + apiHost + ')';
+                            apiLabel.style.color = '#46e3a0';
+                        } else if (apiBase.indexOf('pages.dev') !== -1) {
+                            apiLabel.textContent = 'Cloudflare Pages';
+                            apiLabel.style.color = '#f48120';
+                        } else if (apiBase === '' || apiBase === window.location.origin) {
+                            apiLabel.textContent = 'نفس الخادم (' + window.location.hostname + ')';
+                            apiLabel.style.color = '#aaa';
+                        } else {
+                            apiLabel.textContent = apiBase;
+                            apiLabel.style.color = '#ccc';
+                        }
+                    })();
+                    </script>
                 </section>
 
                 <section id="users-section" class="content-section hidden" style="display: none;">
