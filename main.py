@@ -689,10 +689,11 @@ def require_admin(f):
         return f(*args, **kwargs)
     return decorated_function
 
+@app.route('/')
 @app.route('/health')
 @app.route('/ping')
 def health():
-    return "OK", 200
+    return "Bot is running", 200
 
 
 @app.route('/api/auth', methods=['POST'])
