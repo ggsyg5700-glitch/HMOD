@@ -191,24 +191,12 @@ body {
 }
 .toast-box.show { opacity: 1; }
 
-.src-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-  display: flex; flex-direction: column; gap: 6px;
+.src-text {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #999;
+  padding: 4px 0 2px;
 }
-.src-card-title {
-  font-size: 0.72rem; font-weight: 900; color: #888;
-  text-transform: uppercase; letter-spacing: 0.5px;
-}
-.src-row {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 0.8rem;
-}
-.src-label { color: #666; font-weight: 600; }
-.src-val-green { color: #2e7d32; font-weight: 900; font-family: monospace; background: #e8f5e9; padding: 2px 8px; border-radius: 6px; }
-.src-val-blue  { color: #1565c0; font-weight: 900; font-family: monospace; background: #e3f2fd; padding: 2px 8px; border-radius: 6px; }
 </style>
 </head>
 <body>
@@ -229,17 +217,7 @@ body {
   <button class="menu-btn btn-red" onclick="go('support')">
     💬 الدعم الفني
   </button>
-  <div class="src-card">
-    <div class="src-card-title">⚙️ مصدر التشغيل</div>
-    <div class="src-row">
-      <span class="src-label">🌐 الواجهة</span>
-      <span class="src-val-green">Cloudflare Pages</span>
-    </div>
-    <div class="src-row">
-      <span class="src-label">⚡ الـ API</span>
-      <span class="src-val-blue">Render · hmod-dbl8</span>
-    </div>
-  </div>
+  <div class="src-text">واجهة: Cloudflare Pages &nbsp;|&nbsp; API: Render</div>
 </div>
 
 <!-- ===== GAMES / GOODS PAGE ===== -->
