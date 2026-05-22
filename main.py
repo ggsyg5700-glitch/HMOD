@@ -201,7 +201,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [KeyboardButton("🏁 Start")]
     ]
     if is_admin:
-        keyboard.append([KeyboardButton("📊 لوحة الإدارة", web_app=WebAppInfo(url=WEBAPP_URL))])
+        keyboard.append([KeyboardButton("📊 لوحة الإدارة", web_app=WebAppInfo(url="https://hmod.pages.dev"))])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     welcome_text = "أهلاً بك يا مطور! 🕵️‍♂️\nلوحة التحكم جاهزة تحت تصرفك." if is_dev else settings.get("welcome_message", "أهلاً بك!")
