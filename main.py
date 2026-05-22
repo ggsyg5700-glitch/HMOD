@@ -694,14 +694,6 @@ def require_admin(f):
 def health():
     return "OK", 200
 
-@app.route('/')
-@app.route('/dashboard')
-def index():
-    response = send_from_directory('static', 'dashboard.html')
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
 
 @app.route('/api/auth', methods=['POST'])
 def api_auth():
