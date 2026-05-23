@@ -19,18 +19,14 @@
             <h3 class="mb-4 text-accent h4 h-md-3">دخول الإدارة</h3>
             <div class="mt-4">
                 <input type="password" id="password-input" class="form-control form-control-lg text-center bg-secondary text-white border-0 mb-3" placeholder="كلمة السر" onkeydown="if(event.key==='Enter') authenticateUser()">
-                <button class="btn btn-primary btn-lg w-100 py-3 mb-2" onclick="authenticateUser()">دخول النظام</button>
-                <!-- زر البصمة -->
-                <button id="biometric-btn" class="btn btn-outline-light btn-lg w-100 py-3 mt-1" onclick="biometricLogin()" style="display:none; border-radius:12px; letter-spacing:0.5px;">
+                <button id="login-btn" class="btn btn-primary btn-lg w-100 py-3 mb-2" onclick="authenticateUser()">
+                    <span id="login-btn-text">دخول النظام</span>
+                </button>
+                <!-- زر البصمة — يظهر تلقائياً إذا محفوظة -->
+                <button id="biometric-btn" class="btn btn-outline-light btn-lg w-100 py-3 mt-1" onclick="biometricLogin()" style="display:none; border-radius:12px;">
                     <i class="fas fa-fingerprint me-2" style="color:#7c3aed;"></i> دخول بالبصمة
                 </button>
-                <div id="biometric-status" class="mt-2 small" style="color:#aaa; min-height:20px;"></div>
-            </div>
-            <!-- رابط تسجيل البصمة بعد الدخول -->
-            <div id="register-biometric-wrap" class="mt-3" style="display:none;">
-                <button class="btn btn-sm btn-outline-secondary w-100" onclick="registerBiometric()" style="border-radius:10px;">
-                    <i class="fas fa-fingerprint me-1"></i> حفظ البصمة لتسريع الدخول
-                </button>
+                <div id="biometric-status" class="mt-2 small" style="color:#aaa; min-height:18px;"></div>
             </div>
         </div>
     </div>
@@ -38,6 +34,14 @@
     <div id="main-app" class="container-fluid" style="display: none;">
         <!-- نظام التنبيهات العائمة -->
         <div id="toast-container" class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index: 10000"></div>
+        <!-- بانر حفظ البصمة — يظهر مرة بعد الدخول بكلمة السر -->
+        <div id="register-biometric-wrap" style="display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:9999; background:#1e1e2e; border:1px solid #7c3aed55; border-radius:14px; padding:12px 20px; box-shadow:0 4px 20px #0008; white-space:nowrap;">
+            <span style="color:#ccc; font-size:0.85rem;">هل تريد الدخول بالبصمة في المرات القادمة؟</span>
+            <button class="btn btn-sm ms-2" onclick="registerBiometric()" style="background:#7c3aed; color:#fff; border-radius:8px; font-size:0.8rem;">
+                <i class="fas fa-fingerprint me-1"></i> نعم، احفظ البصمة
+            </button>
+            <button class="btn btn-sm ms-1" onclick="document.getElementById('register-biometric-wrap').style.display='none'" style="background:transparent; color:#888; font-size:0.8rem;">✕</button>
+        </div>
 
         <div class="row">
             <nav class="col-md-2 d-none d-md-block sidebar shadow-lg">
@@ -409,6 +413,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/dashboard.js?v=1.4.0"></script>
+    <script src="/static/dashboard.js?v=1.5.0"></script>
 </body>
 </html>

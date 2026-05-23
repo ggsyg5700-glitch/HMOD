@@ -81,36 +81,47 @@ window.apiCall = async function(url, method = 'GET', body = null, timeoutMs = 12
 };
 
 // ======== دالة مشتركة لفتح الداشبورد بعد التحقق ========
-function openDashboard() {
+function openDashboard(fromBiometric) {
     const authScreen = document.getElementById('auth-screen');
     const mainApp = document.getElementById('main-app');
-    const registerWrap = document.getElementById('register-biometric-wrap');
     if (authScreen) authScreen.style.display = 'none';
     if (mainApp) {
         mainApp.style.display = 'block';
         mainApp.classList.add('fade-in');
     }
     window.loadStatus();
-    // إخفاء زر حفظ البصمة داخل الداشبورد
-    if (registerWrap) registerWrap.style.display = 'none';
+    // عرض بانر البصمة فقط إذا دخل بكلمة السر ولم يسجل بصمة بعد
+    if (!fromBiometric && window.PublicKeyCredential && !localStorage.getItem('biometric_registered')) {
+        const registerWrap = document.getElementById('register-biometric-wrap');
+        if (registerWrap) setTimeout(() => registerWrap.style.display = 'block', 800);
+    }
 }
 
 window.authenticateUser = async function() {
     const passwordInput = document.getElementById('password-input');
+    const loginBtn = document.getElementById('login-btn');
+    const loginBtnText = document.getElementById('login-btn-text');
     if (!passwordInput) return;
-    const password = passwordInput.value;
-    const res = await window.apiCall('/api/auth', 'POST', { password });
+    const password = passwordInput.value.trim();
+    if (!password) { window.showToast('أدخل كلمة السر', 'danger'); return; }
+
+    // حالة التحميل
+    if (loginBtn) loginBtn.disabled = true;
+    if (loginBtnText) loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التحقق...';
+
+    const res = await window.apiCall('/api/auth', 'POST', { password }, 30000);
+
+    // إعادة الزر
+    if (loginBtn) loginBtn.disabled = false;
+    if (loginBtnText) loginBtnText.innerHTML = 'دخول النظام';
+
     if (res.success) {
         localStorage.setItem('admin_token', res.token);
-        openDashboard();
-        window.showToast("تم تسجيل الدخول بنجاح");
-        // عرض زر "حفظ البصمة" إذا المتصفح يدعمها ولم تُسجَّل بعد
-        if (window.PublicKeyCredential && !localStorage.getItem('biometric_registered')) {
-            const registerWrap = document.getElementById('register-biometric-wrap');
-            if (registerWrap) registerWrap.style.display = 'block';
-        }
+        openDashboard(false);
+        window.showToast('تم تسجيل الدخول بنجاح');
     } else {
         window.showToast('كلمة المرور خاطئة!', 'danger');
+        if (passwordInput) { passwordInput.value = ''; passwordInput.focus(); }
     }
 };
 
@@ -180,15 +191,9 @@ window.biometricLogin = async function() {
             }
         });
         if (assertion) {
-            // البصمة تحققت — نستخدم التوكن المحفوظ
-            const token = localStorage.getItem('admin_token');
-            if (token) {
-                if (statusEl) statusEl.textContent = '';
-                openDashboard();
-                window.showToast('تم الدخول بالبصمة ✅');
-            } else {
-                if (statusEl) statusEl.textContent = 'يجب تسجيل الدخول بكلمة السر مرة واحدة أولاً';
-            }
+            if (statusEl) statusEl.textContent = '';
+            openDashboard(true);
+            window.showToast('تم الدخول بالبصمة ✅');
         }
     } catch (e) {
         if (statusEl) statusEl.textContent = '';
@@ -200,15 +205,6 @@ window.biometricLogin = async function() {
     }
 };
 
-// ======== تحقق عند التحميل: هل المتصفح يدعم البصمة؟ ========
-(function checkBiometricSupport() {
-    if (!window.PublicKeyCredential) return;
-    const isRegistered = localStorage.getItem('biometric_registered');
-    if (isRegistered) {
-        const bioBtn = document.getElementById('biometric-btn');
-        if (bioBtn) bioBtn.style.display = 'block';
-    }
-})();
 
 window.refreshSystem = async function() {
     const modalEl = document.getElementById('countdownModal');
@@ -758,17 +754,18 @@ window.sendBackupToBot = async function() {
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // Add debugging
-    console.log("Dashboard JS Loaded");
-    
-    // Force auth check on load
     const mainApp = document.getElementById('main-app');
     const authScreen = document.getElementById('auth-screen');
-    
-    // Always show login on fresh load to ensure password is required
-    localStorage.removeItem('admin_token');
+
+    // تأكد إن شاشة الدخول ظاهرة والداشبورد مخفي
     if (mainApp) mainApp.style.display = 'none';
     if (authScreen) authScreen.style.display = 'flex';
+
+    // إظهار زر البصمة إذا كانت مسجلة مسبقاً
+    if (window.PublicKeyCredential && localStorage.getItem('biometric_registered')) {
+        const bioBtn = document.getElementById('biometric-btn');
+        if (bioBtn) bioBtn.style.display = 'block';
+    }
     
     // Quick fix for global functions
     window.authenticateUser = window.authenticateUser;
