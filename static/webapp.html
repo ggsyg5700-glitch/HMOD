@@ -6,7 +6,7 @@
 <title>القائمة الرئيسية</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
 body {
   min-height: 100vh;
@@ -35,6 +35,9 @@ body {
   transition: transform 0.15s, filter 0.15s;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   letter-spacing: 0.3px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .menu-btn:active { transform: scale(0.97); filter: brightness(0.92); }
 
@@ -64,6 +67,9 @@ body {
   background: rgba(0,0,0,0.08); border: none; cursor: pointer;
   font-size: 18px; display: flex; align-items: center; justify-content: center;
   color: #333; transition: background 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .back-btn:active { background: rgba(0,0,0,0.15); }
 .page-title { font-size: 1.1rem; font-weight: 900; color: #1a1a1a; }
@@ -86,6 +92,9 @@ body {
   background: #4caf50; color: #fff;
   font-size: 0.85rem; font-weight: 800;
   transition: filter 0.15s, background 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .buy-btn:active { filter: brightness(0.88); }
 .buy-btn.confirm-state {
@@ -146,6 +155,9 @@ body {
   background: #4caf50; color: #fff;
   font-size: 1rem; font-weight: 900; cursor: pointer;
   transition: filter 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .submit-btn:active { filter: brightness(0.9); }
 .submit-btn:disabled { opacity: 0.55; }

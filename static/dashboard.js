@@ -90,8 +90,8 @@ function openDashboard(fromBiometric) {
         mainApp.classList.add('fade-in');
     }
     window.loadStatus();
-    // عرض بانر البصمة بعد الدخول بكلمة السر — إذا لم تُسجَّل بعد
-    if (!fromBiometric && !localStorage.getItem('biometric_registered')) {
+    // عرض بانر البصمة مرة واحدة فقط — إذا لم تُسجَّل ولم يُرفض البانر من قبل
+    if (!fromBiometric && !localStorage.getItem('biometric_registered') && !localStorage.getItem('biometric_prompt_seen')) {
         const registerWrap = document.getElementById('register-biometric-wrap');
         if (registerWrap) setTimeout(() => { registerWrap.style.display = 'flex'; }, 1200);
     }
@@ -140,6 +140,8 @@ window.registerBiometric = async function() {
 
     // تحقق من دعم المتصفح
     if (!window.PublicKeyCredential || !window.isSecureContext) {
+        // احفظ أن المستخدم شاف البانر — لا يظهر مجدداً
+        localStorage.setItem('biometric_prompt_seen', '1');
         if (registerWrap) registerWrap.style.display = 'none';
         // كشف Telegram WebView
         const isTelegram = /Telegram/i.test(navigator.userAgent) || (window.Telegram && window.Telegram.WebApp);

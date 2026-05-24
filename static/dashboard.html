@@ -48,7 +48,7 @@
             <button class="btn btn-sm ms-2" onclick="registerBiometric()" style="background:#7c3aed; color:#fff; border-radius:8px; font-size:0.8rem;">
                 <i class="fas fa-fingerprint me-1"></i> نعم، احفظ البصمة
             </button>
-            <button class="btn btn-sm ms-1" onclick="document.getElementById('register-biometric-wrap').style.display='none'" style="background:transparent; color:#888; font-size:0.8rem;">✕</button>
+            <button class="btn btn-sm ms-1" onclick="localStorage.setItem('biometric_prompt_seen','1');document.getElementById('register-biometric-wrap').style.display='none'" style="background:transparent; color:#888; font-size:0.8rem;">✕</button>
         </div>
 
         <div class="row">
@@ -425,6 +425,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/dashboard.js?v=1.7.1"></script>
+    <script src="/static/dashboard.js?v=1.7.2"></script>
 </body>
 </html>
