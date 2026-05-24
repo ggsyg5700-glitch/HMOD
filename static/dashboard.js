@@ -117,7 +117,7 @@ window.authenticateUser = async function() {
     if (loginBtn) loginBtn.disabled = true;
     if (loginBtnText) loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التحقق...';
 
-    const res = await window.apiCall('/api/auth', 'POST', { password }, 30000);
+    const res = await window.apiCall('/api/auth', 'POST', { password }, 8000);
 
     // إعادة الزر لحالته الطبيعية
     if (loginBtn) loginBtn.disabled = false;
@@ -492,10 +492,10 @@ window.loadGoods = async function() {
                         <span class="badge bg-success fs-5 px-3 py-2 shadow-sm">${item.price} ل.س</span>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-warning flex-grow-1 fw-bold shadow-sm" data-item-id="${item.id}" onclick="window.editProductById(this.dataset.itemId)">
+                        <button class="btn btn-warning flex-grow-1 fw-bold shadow-sm" data-item-id="${item.id}" onclick="window.editProductById(this.dataset.itemId)" style="touch-action:manipulation; -webkit-tap-highlight-color:transparent;">
                             <i class="fas fa-edit me-2"></i> تعديل
                         </button>
-                        <button class="btn btn-outline-danger shadow-sm" data-item-id="${item.id}" onclick="window.deleteProduct(this.dataset.itemId)">
+                        <button class="btn btn-outline-danger shadow-sm" data-item-id="${item.id}" onclick="window.deleteProduct(this.dataset.itemId)" style="touch-action:manipulation; -webkit-tap-highlight-color:transparent;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -504,7 +504,7 @@ window.loadGoods = async function() {
         </div>
     `).join('') + `
         <div class="col-md-4 mb-4 fade-in">
-            <div class="card bg-dark border-secondary p-3 h-100 d-flex align-items-center justify-content-center rounded-4 shadow-sm" style="cursor: pointer; border-style: dashed; min-height: 250px;" onclick="window.addProduct()">
+            <div class="card bg-dark border-secondary p-3 h-100 d-flex align-items-center justify-content-center rounded-4 shadow-sm" style="cursor: pointer; border-style: dashed; min-height: 250px; touch-action:manipulation; -webkit-tap-highlight-color:transparent;" onclick="window.addProduct()">
                 <i class="fas fa-plus-circle fa-3x text-accent mb-3"></i>
                 <h5 class="text-white fw-bold">إضافة منتج جديد</h5>
             </div>

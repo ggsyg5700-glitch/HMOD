@@ -16,6 +16,12 @@
     --orange: #f97b3d;
 }
 
+/* ======== إلغاء تأخير 300ms على كل الأزرار والروابط — يمنع الحاجة لضغطتين ======== */
+button, a, [onclick], .btn, .nav-link, .card[onclick], input[type="submit"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
 html, body { height: 100%; margin: 0; padding: 0; }
 
 body {
