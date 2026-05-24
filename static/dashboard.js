@@ -83,44 +83,52 @@ window.apiCall = async function(url, method = 'GET', body = null, timeoutMs = 12
 // ======== دالة مشتركة لفتح الداشبورد بعد التحقق ========
 function openDashboard(fromBiometric) {
     const authScreen = document.getElementById('auth-screen');
-    const mainApp = document.getElementById('main-app');
+    const mainApp    = document.getElementById('main-app');
     if (authScreen) authScreen.style.display = 'none';
     if (mainApp) {
         mainApp.style.display = 'block';
         mainApp.classList.add('fade-in');
     }
     window.loadStatus();
-    // عرض بانر البصمة فقط إذا دخل بكلمة السر ولم يسجل بصمة بعد
-    if (!fromBiometric && window.PublicKeyCredential && !localStorage.getItem('biometric_registered')) {
+    // عرض بانر البصمة بعد الدخول بكلمة السر — إذا لم تُسجَّل بعد
+    if (!fromBiometric && !localStorage.getItem('biometric_registered')) {
         const registerWrap = document.getElementById('register-biometric-wrap');
-        if (registerWrap) setTimeout(() => registerWrap.style.display = 'block', 800);
+        if (registerWrap) setTimeout(() => { registerWrap.style.display = 'flex'; }, 1200);
     }
 }
 
 window.authenticateUser = async function() {
     const passwordInput = document.getElementById('password-input');
-    const loginBtn = document.getElementById('login-btn');
+    const loginBtn     = document.getElementById('login-btn');
     const loginBtnText = document.getElementById('login-btn-text');
+    const errorDiv     = document.getElementById('password-error');
     if (!passwordInput) return;
-    const password = passwordInput.value.trim();
-    if (!password) { window.showToast('أدخل كلمة السر', 'danger'); return; }
 
-    // حالة التحميل
+    // أخفِ أي خطأ سابق
+    if (errorDiv) errorDiv.style.display = 'none';
+
+    const password = passwordInput.value.trim();
+    if (!password) {
+        if (errorDiv) { errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i> أدخل كلمة السر أولاً'; errorDiv.style.display = 'block'; }
+        return;
+    }
+
+    // حالة التحميل — يعطّل الزر ويظهر دوار
     if (loginBtn) loginBtn.disabled = true;
     if (loginBtnText) loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التحقق...';
 
     const res = await window.apiCall('/api/auth', 'POST', { password }, 30000);
 
-    // إعادة الزر
+    // إعادة الزر لحالته الطبيعية
     if (loginBtn) loginBtn.disabled = false;
     if (loginBtnText) loginBtnText.innerHTML = 'دخول النظام';
 
-    if (res.success) {
+    if (res && res.success) {
         localStorage.setItem('admin_token', res.token);
         openDashboard(false);
-        window.showToast('تم تسجيل الدخول بنجاح');
     } else {
-        window.showToast('كلمة المرور خاطئة!', 'danger');
+        // خطأ مباشرة تحت الحقل — بدون toast
+        if (errorDiv) { errorDiv.innerHTML = '<i class="fas fa-times-circle me-1"></i> كلمة السر خاطئة، حاول مجدداً'; errorDiv.style.display = 'block'; }
         if (passwordInput) { passwordInput.value = ''; passwordInput.focus(); }
     }
 };
