@@ -136,8 +136,22 @@ window.authenticateUser = async function() {
 // ======== WebAuthn — تسجيل البصمة ========
 window.registerBiometric = async function() {
     const statusEl = document.getElementById('biometric-status');
-    if (!window.PublicKeyCredential) {
-        window.showToast('جهازك لا يدعم البصمة', 'warning');
+    const registerWrap = document.getElementById('register-biometric-wrap');
+
+    // تحقق من دعم المتصفح
+    if (!window.PublicKeyCredential || !window.isSecureContext) {
+        if (registerWrap) registerWrap.style.display = 'none';
+        // كشف Telegram WebView
+        const isTelegram = /Telegram/i.test(navigator.userAgent) || (window.Telegram && window.Telegram.WebApp);
+        if (isTelegram) {
+            window.showToast('افتح الرابط في Chrome لاستخدام البصمة', 'warning');
+            if (statusEl) {
+                statusEl.style.color = '#ffc107';
+                statusEl.innerHTML = '⚠️ افتح في <b>Chrome</b>: <small style="word-break:break-all">' + location.href + '</small>';
+            }
+        } else {
+            window.showToast('متصفحك لا يدعم البصمة — جرب Chrome', 'warning');
+        }
         return;
     }
     try {
@@ -399,19 +413,19 @@ window.loadOrders = async function() {
                     <button onclick="window.confirmApproveOrder('${o.id}', '${(o.username||'').replace(/'/g,'')}', '${o.price||0}', '${(o.item_name||'طلب شحن').replace(/'/g,'')}', '${transId}')" style="
                         background: linear-gradient(135deg, #28a745, #20c745);
                         color: white; border: none; border-radius: 10px;
-                        padding: 8px 24px; font-weight: 700; cursor: pointer;
-                        font-size: 0.9rem; box-shadow: 0 4px 15px rgba(40,167,69,0.3);
-                        transition: all 0.2s;
-                    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        padding: 10px 28px; font-weight: 700; cursor: pointer;
+                        font-size: 0.95rem; box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+                        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+                    ">
                         <i class="fas fa-check me-2"></i>قبول
                     </button>
                     <button onclick="window.updateOrderStatus('${o.id}', 'مرفوض')" style="
                         background: linear-gradient(135deg, #dc3545, #ff4757);
                         color: white; border: none; border-radius: 10px;
-                        padding: 8px 24px; font-weight: 700; cursor: pointer;
-                        font-size: 0.9rem; box-shadow: 0 4px 15px rgba(220,53,69,0.3);
-                        transition: all 0.2s;
-                    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        padding: 10px 28px; font-weight: 700; cursor: pointer;
+                        font-size: 0.95rem; box-shadow: 0 4px 15px rgba(220,53,69,0.3);
+                        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+                    ">
                         <i class="fas fa-times me-2"></i>رفض
                     </button>
                 </div>` : ''}
@@ -757,6 +771,26 @@ window.sendBackupToBot = async function() {
         window.showToast("تم الإرسال للبوت بنجاح");
     } else {
         window.showToast("فشل الإرسال", "danger");
+    }
+};
+
+// ======== مسح السجل — حذف الطلبات المكتملة والمرفوضة ========
+window.clearOrdersLog = async function() {
+    const confirmed = confirm(
+        '⚠️ مسح السجل\n\n' +
+        'سيتم حذف جميع الطلبات المكتملة والمرفوضة نهائياً.\n\n' +
+        '✅ يبقى: الطلبات قيد الانتظار\n' +
+        '🗑️ يُحذف: المكتملة + المرفوضة\n\n' +
+        'لا يمكن التراجع عن هذا الإجراء!\n' +
+        'هل أنت متأكد؟'
+    );
+    if (!confirmed) return;
+    const res = await window.apiCall('/api/orders/clear', 'DELETE');
+    if (res.success) {
+        window.showToast(`✅ تم مسح ${res.deleted} طلب من السجل`);
+        window.loadOrders();
+    } else {
+        window.showToast('فشل مسح السجل: ' + (res.message || 'خطأ'), 'danger');
     }
 };
 

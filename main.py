@@ -837,6 +837,9 @@ def api_order_status(order_id):
                 # إشعار الأدمن في تيليغرام
                 source_label = "✅ تمت الموافقة" if new_status == "مكتمل" else "❌ تم الرفض"
                 credit_line = f"💸 الرصيد المضاف: {int(credited)} ليرة\n" if credited > 0 else ""
+                now_dt = datetime.datetime.now()
+                now_str = now_dt.strftime("%Y-%m-%d")
+                now_time = now_dt.strftime("%H:%M:%S")
                 admin_notif = (
                     f"🖥️ **إجراء من لوحة الإدارة**\n\n"
                     f"{source_label} على الطلب التالي:\n"
@@ -847,7 +850,9 @@ def api_order_status(order_id):
                     f"{credit_line}"
                     f"🆔 رقم الطلب: `{o['id'][:8]}`\n"
                     f"━━━━━━━━━━━━━━━━\n"
-                    f"📍 المصدر: لوحة الإدارة (الويب)"
+                    f"🕐 الساعة: {now_time}\n"
+                    f"📅 التاريخ: {now_str}\n"
+                    f"📍 المصدر: واجهة الأدمن (الويب)"
                 )
                 requests.post(tg_url, json={"chat_id": ADMIN_ID, "text": admin_notif, "parse_mode": "Markdown"}, timeout=10)
             except: pass
@@ -899,6 +904,16 @@ def api_order_status(order_id):
 
             return jsonify({"success": True, "credited": credited})
     return jsonify({"success": False, "message": "Order not found"}), 404
+
+@app.route('/api/orders/clear', methods=['DELETE'])
+@require_admin
+def api_orders_clear():
+    global orders
+    before = len(orders)
+    orders = [o for o in orders if o.get('status') == 'قيد الانتظار']
+    deleted = before - len(orders)
+    save_json(ORDERS_FILE, orders)
+    return jsonify({"success": True, "deleted": deleted, "remaining": len(orders)})
 
 @app.route('/api/settings/deposit-numbers', methods=['GET', 'POST', 'DELETE'])
 @require_admin
