@@ -2,17 +2,19 @@ const API_BASE = 'https://hmod-dbl8.onrender.com';
 
 // دالة موحدة لفتح مودال المنتج
 function openProductModal(item) {
-    const titleEl  = document.getElementById('productModalTitle');
-    const idEl     = document.getElementById('edit-product-id');
-    const nameEl   = document.getElementById('edit-product-name');
-    const priceEl  = document.getElementById('edit-product-price');
-    const descEl   = document.getElementById('edit-product-desc');
+    const titleEl    = document.getElementById('productModalTitle');
+    const idEl       = document.getElementById('edit-product-id');
+    const nameEl     = document.getElementById('edit-product-name');
+    const priceEl    = document.getElementById('edit-product-price');
+    const descEl     = document.getElementById('edit-product-desc');
+    const categoryEl = document.getElementById('edit-product-category');
 
-    if (titleEl)  titleEl.textContent = item ? 'تعديل المنتج' : 'إضافة منتج جديد';
-    if (idEl)     idEl.value    = item ? item.id : '';
-    if (nameEl)   nameEl.value  = item ? item.name : '';
-    if (priceEl)  priceEl.value = item ? item.price : '';
-    if (descEl)   descEl.value  = item ? (item.description || '') : '';
+    if (titleEl)    titleEl.textContent = item ? 'تعديل المنتج' : 'إضافة منتج جديد';
+    if (idEl)       idEl.value       = item ? item.id : '';
+    if (nameEl)     nameEl.value     = item ? item.name : '';
+    if (priceEl)    priceEl.value    = item ? item.price : '';
+    if (descEl)     descEl.value     = item ? (item.description || '') : '';
+    if (categoryEl) categoryEl.value = item ? (item.category || 'شحن فري فاير') : 'شحن فري فاير';
 
     const modalEl = document.getElementById('productModal');
     if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -201,8 +203,20 @@ window.registerBiometric = async function() {
 // ======== WebAuthn — دخول بالبصمة ========
 window.biometricLogin = async function() {
     const statusEl = document.getElementById('biometric-status');
-    if (!window.PublicKeyCredential) return;
-    if (statusEl) statusEl.textContent = 'جاري التحقق...';
+    const bioBtn   = document.getElementById('biometric-btn');
+
+    // المتصفح لا يدعم WebAuthn
+    if (!window.PublicKeyCredential || !window.isSecureContext) {
+        if (statusEl) {
+            statusEl.style.color = '#f5c842';
+            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>افتح الرابط في <b>Chrome</b> لاستخدام البصمة';
+        }
+        return;
+    }
+
+    if (statusEl) { statusEl.style.color = '#8892a4'; statusEl.textContent = 'جاري التحقق...'; }
+    if (bioBtn)   { bioBtn.disabled = true; }
+
     try {
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
@@ -216,15 +230,27 @@ window.biometricLogin = async function() {
         });
         if (assertion) {
             if (statusEl) statusEl.textContent = '';
+            if (bioBtn)   bioBtn.disabled = false;
             openDashboard(true);
-            window.showToast('تم الدخول بالبصمة ✅');
+            window.showToast('✅ تم الدخول بالبصمة بنجاح');
         }
     } catch (e) {
         if (statusEl) statusEl.textContent = '';
+        if (bioBtn)   bioBtn.disabled = false;
         if (e.name === 'NotAllowedError') {
-            window.showToast('تم إلغاء البصمة', 'warning');
+            window.showToast('تم إلغاء التحقق بالبصمة', 'warning');
+        } else if (e.name === 'InvalidStateError' || e.name === 'NotFoundError') {
+            // البصمة المحفوظة لم تعد صالحة — امسحها وأظهر للمستخدم
+            localStorage.removeItem('biometric_registered');
+            localStorage.removeItem('biometric_cred_id');
+            localStorage.removeItem('biometric_prompt_seen');
+            if (bioBtn) bioBtn.style.display = 'none';
+            if (statusEl) {
+                statusEl.style.color = '#f75f5f';
+                statusEl.innerHTML = '<i class="fas fa-redo me-1"></i>البصمة انتهت صلاحيتها — سجّل دخولك بكلمة السر وأعد تفعيلها';
+            }
         } else {
-            window.showToast('فشل التحقق بالبصمة', 'danger');
+            window.showToast('فشل التحقق بالبصمة: ' + e.message, 'danger');
         }
     }
 };
@@ -475,43 +501,106 @@ window._goodsCache = [];
 window.loadGoods = async function() {
     const container = document.getElementById('goods-container');
     if (!container) return;
-    container.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-spinner fa-spin fa-2x text-accent"></i><p class="text-muted mt-3">جاري تحميل السلع...</p></div>';
+    container.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-spinner fa-spin fa-2x" style="color:var(--accent)"></i><p class="text-muted mt-3">جاري تحميل السلع...</p></div>';
     const res = await window.apiCall('/api/goods');
-    if (!res.success) { container.innerHTML = '<p class="text-danger text-center p-4">فشل تحميل السلع</p>'; return; }
+    if (!res.success) {
+        container.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-exclamation-triangle fa-2x text-danger mb-3 d-block"></i><p class="text-danger fw-bold">فشل تحميل السلع — تحقق من الاتصال</p></div>';
+        return;
+    }
 
     window._goodsCache = res.data;
 
-    container.innerHTML = res.data.map(item => `
-        <div class="col-md-4 mb-4 fade-in">
-            <div class="card bg-dark border-secondary p-4 h-100 shadow-lg border-2 rounded-4">
-                <div class="bg-secondary p-3 rounded-3 mb-3 text-center border border-accent">
-                    <h4 class="text-accent fw-bold mb-0">${item.name}</h4>
+    if (res.data.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center p-5">
+                <div style="background:var(--bg-card);border:2px dashed var(--border-light);border-radius:18px;padding:50px 30px;">
+                    <i class="fas fa-box-open fa-3x mb-3 d-block" style="color:var(--text-secondary)"></i>
+                    <p class="fw-bold" style="color:var(--text-secondary)">لا توجد منتجات بعد</p>
+                    <button class="btn mt-2 fw-bold px-4" onclick="window.addProduct()" style="background:linear-gradient(135deg,#3a7bd5,#5b8ef5);color:#fff;border:none;border-radius:12px;">
+                        <i class="fas fa-plus me-2"></i>أضف أول منتج
+                    </button>
                 </div>
-                <p class="text-white-50 small flex-grow-1 text-end" style="line-height: 1.6;">${item.description || 'لا يوجد وصف متاح لهذه السلعة'}</p>
-                <div class="d-flex flex-column gap-3 mt-3 pt-3 border-top border-secondary">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted small fw-bold">السعر:</span>
-                        <span class="badge bg-success fs-5 px-3 py-2 shadow-sm">${item.price} ل.س</span>
+            </div>`;
+        return;
+    }
+
+    const catConfig = {
+        'شحن فري فاير': { color: '#f97b3d', icon: 'fa-fire',      bg: 'rgba(249,123,61,0.08)',  border: 'rgba(249,123,61,0.25)' },
+        'شحن ببجي':     { color: '#5b8ef5', icon: 'fa-crosshairs', bg: 'rgba(91,142,245,0.08)',  border: 'rgba(91,142,245,0.25)' },
+        'عام':          { color: '#22c97a', icon: 'fa-tag',         bg: 'rgba(34,201,122,0.08)', border: 'rgba(34,201,122,0.25)' },
+    };
+    function getCat(cat) {
+        return catConfig[cat] || { color: '#a78bfa', icon: 'fa-cube', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.25)' };
+    }
+
+    const categories = {};
+    res.data.forEach(item => {
+        const cat = item.category || 'عام';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(item);
+    });
+
+    let html = '';
+    for (const [cat, items] of Object.entries(categories)) {
+        const s = getCat(cat);
+        html += `
+        <div class="col-12 mt-3 mb-1">
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+                <div style="width:34px;height:34px;background:${s.bg};border:1px solid ${s.border};border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas ${s.icon}" style="color:${s.color};font-size:0.9rem;"></i>
+                </div>
+                <span style="color:${s.color};font-weight:800;font-size:1rem;">${cat}</span>
+                <span style="background:${s.bg};color:${s.color};border:1px solid ${s.border};border-radius:20px;padding:2px 10px;font-size:0.72rem;font-weight:700;">${items.length} منتج</span>
+                <div style="flex:1;height:1px;background:${s.border};"></div>
+            </div>
+        </div>`;
+
+        items.forEach(item => {
+            const price = parseFloat(item.price) || 0;
+            html += `
+            <div class="col-md-4 col-sm-6 mb-4 fade-in">
+                <div class="goods-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:all 0.25s;box-shadow:0 4px 16px rgba(0,0,0,0.3);"
+                    onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='${s.border}';this.style.boxShadow='0 12px 28px rgba(0,0,0,0.45)'"
+                    onmouseleave="this.style.transform='';this.style.borderColor='var(--border)';this.style.boxShadow='0 4px 16px rgba(0,0,0,0.3)'">
+                    <div style="background:${s.bg};padding:14px 18px;border-bottom:1px solid ${s.border};display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <span style="color:#eaf0fb;font-weight:800;font-size:0.92rem;line-height:1.3;">${item.name}</span>
+                        <span style="background:${s.bg};color:${s.color};border:1px solid ${s.border};border-radius:20px;padding:2px 9px;font-size:0.68rem;font-weight:700;white-space:nowrap;flex-shrink:0;">${cat}</span>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-warning flex-grow-1 fw-bold shadow-sm" data-item-id="${item.id}" onclick="window.editProductById(this.dataset.itemId)" style="touch-action:manipulation; -webkit-tap-highlight-color:transparent;">
-                            <i class="fas fa-edit me-2"></i> تعديل
-                        </button>
-                        <button class="btn btn-outline-danger shadow-sm" data-item-id="${item.id}" onclick="window.deleteProduct(this.dataset.itemId)" style="touch-action:manipulation; -webkit-tap-highlight-color:transparent;">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <div style="padding:14px 18px;">
+                        <p style="color:#6b7a96;font-size:0.78rem;min-height:32px;margin-bottom:14px;line-height:1.5;">${item.description || 'لا يوجد وصف'}</p>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 14px;background:rgba(34,201,122,0.06);border:1px solid rgba(34,201,122,0.15);border-radius:10px;">
+                            <span style="color:#8892a4;font-size:0.78rem;font-weight:700;">السعر</span>
+                            <span style="color:#22c97a;font-weight:800;font-size:1.05rem;">${price.toLocaleString()} <span style="font-size:0.75rem;opacity:0.8;">ل.س</span></span>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-edit flex-grow-1" data-item-id="${item.id}" onclick="window.editProductById(this.dataset.itemId)" style="border-radius:10px;padding:8px 0;font-size:0.83rem;">
+                                <i class="fas fa-edit me-1"></i> تعديل
+                            </button>
+                            <button class="btn btn-delete" data-item-id="${item.id}" onclick="window.deleteProduct(this.dataset.itemId)" style="border-radius:10px;padding:8px 14px;font-size:0.83rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>`;
+        });
+    }
+
+    html += `
+        <div class="col-md-4 col-sm-6 mb-4 fade-in">
+            <div style="background:var(--bg-card);border:2px dashed var(--border-light);border-radius:18px;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;"
+                onmouseenter="this.style.borderColor='var(--accent)';this.style.background='rgba(91,142,245,0.05)'"
+                onmouseleave="this.style.borderColor='var(--border-light)';this.style.background='var(--bg-card)'"
+                onclick="window.addProduct()">
+                <div style="width:48px;height:48px;background:rgba(91,142,245,0.12);border:1px solid rgba(91,142,245,0.25);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+                    <i class="fas fa-plus" style="color:var(--accent);font-size:1.1rem;"></i>
+                </div>
+                <span style="color:var(--text-primary);font-weight:700;font-size:0.88rem;">إضافة منتج جديد</span>
+                <span style="color:var(--text-secondary);font-size:0.73rem;margin-top:4px;">اضغط للإضافة</span>
             </div>
-        </div>
-    `).join('') + `
-        <div class="col-md-4 mb-4 fade-in">
-            <div class="card bg-dark border-secondary p-3 h-100 d-flex align-items-center justify-content-center rounded-4 shadow-sm" style="cursor: pointer; border-style: dashed; min-height: 250px; touch-action:manipulation; -webkit-tap-highlight-color:transparent;" onclick="window.addProduct()">
-                <i class="fas fa-plus-circle fa-3x text-accent mb-3"></i>
-                <h5 class="text-white fw-bold">إضافة منتج جديد</h5>
-            </div>
-        </div>
-    `;
+        </div>`;
+
+    container.innerHTML = html;
 };
 
 window.editProductById = function(itemId) {
@@ -547,33 +636,48 @@ window.addProduct = function() {
 };
 
 window.saveProductChanges = async function() {
-    const idEl = document.getElementById('edit-product-id');
-    const nameEl = document.getElementById('edit-product-name');
-    const priceEl = document.getElementById('edit-product-price');
-    const descEl = document.getElementById('edit-product-desc');
+    const idEl       = document.getElementById('edit-product-id');
+    const nameEl     = document.getElementById('edit-product-name');
+    const priceEl    = document.getElementById('edit-product-price');
+    const descEl     = document.getElementById('edit-product-desc');
+    const categoryEl = document.getElementById('edit-product-category');
+    const saveBtn    = document.getElementById('save-product-btn');
 
     if (!nameEl || !priceEl) return;
 
-    const id = idEl.value;
-    const name = nameEl.value;
-    const price = priceEl.value;
-    const description = descEl.value;
+    const id          = idEl ? idEl.value : '';
+    const name        = nameEl.value.trim();
+    const price       = priceEl.value;
+    const description = descEl ? descEl.value.trim() : '';
+    const category    = categoryEl ? categoryEl.value : 'عام';
 
-    if (!name || !price) {
-        window.showToast("يرجى ملء الحقول المطلوبة", "danger");
+    if (!name) {
+        nameEl.style.borderColor = '#f75f5f';
+        nameEl.focus();
+        window.showToast("يرجى إدخال اسم المنتج", "danger");
+        return;
+    }
+    if (!price || parseFloat(price) <= 0) {
+        priceEl.style.borderColor = '#f75f5f';
+        priceEl.focus();
+        window.showToast("يرجى إدخال سعر صحيح أكبر من صفر", "danger");
         return;
     }
 
-    const payload = id ? { id, name, price, description } : { name, price, description };
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ...'; }
+
+    const payload = id ? { id, name, price, description, category } : { name, price, description, category };
     const res = await window.apiCall('/api/goods', 'POST', payload);
-    
+
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check me-2"></i>حفظ التغييرات'; }
+
     if (res.success) {
         const modalEl = document.getElementById('productModal');
         if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
         window.loadGoods();
-        window.showToast("تم الحفظ بنجاح");
+        window.showToast(id ? "✅ تم تحديث المنتج بنجاح" : "✅ تم إضافة المنتج بنجاح");
     } else {
-        window.showToast("فشل الحفظ", "danger");
+        window.showToast("فشل الحفظ — تحقق من الاتصال", "danger");
     }
 };
 
@@ -801,22 +905,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainApp = document.getElementById('main-app');
     const authScreen = document.getElementById('auth-screen');
 
-    // تأكد إن شاشة الدخول ظاهرة والداشبورد مخفي
     if (mainApp) mainApp.style.display = 'none';
     if (authScreen) authScreen.style.display = 'flex';
 
-    // إظهار زر البصمة إذا كانت مسجلة مسبقاً
-    if (window.PublicKeyCredential && localStorage.getItem('biometric_registered')) {
+    // إظهار زر البصمة إذا سُجِّلت سابقاً — بغض النظر عن دعم المتصفح الحالي
+    // (يتم التحقق من الدعم عند الضغط على الزر وليس هنا)
+    if (localStorage.getItem('biometric_registered')) {
         const bioBtn = document.getElementById('biometric-btn');
-        if (bioBtn) bioBtn.style.display = 'block';
+        if (bioBtn) {
+            bioBtn.style.display = 'block';
+            // إذا كان المتصفح لا يدعم WebAuthn — أظهر تنبيهاً صغيراً
+            if (!window.PublicKeyCredential) {
+                bioBtn.title = 'افتح في Chrome لاستخدام البصمة';
+                bioBtn.style.opacity = '0.6';
+            }
+        }
     }
-    
-    // Quick fix for global functions
-    window.authenticateUser = window.authenticateUser;
-    window.showSection = window.showSection;
-    window.addDepositNumber = window.addDepositNumber;
-    window.saveProductChanges = window.saveProductChanges;
-    
+
     // Active navigation highlighting
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', () => {

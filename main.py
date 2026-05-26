@@ -776,9 +776,10 @@ def api_goods():
         for i, item in enumerate(goods):
             if str(item.get('id')) == str(item_id):
                 goods[i].update({
-                    "name": data.get("name"), 
-                    "price": price, 
-                    "description": data.get("description", "")
+                    "name": data.get("name"),
+                    "price": price,
+                    "description": data.get("description", ""),
+                    "category": data.get("category", goods[i].get("category", "عام"))
                 })
                 found = True
                 break
@@ -788,10 +789,11 @@ def api_goods():
         return jsonify({"success": False, "message": "Item not found"}), 404
     else:
         new_item = {
-            "id": str(uuid.uuid4()), 
-            "name": data.get("name"), 
-            "price": price, 
-            "description": data.get("description", "")
+            "id": str(uuid.uuid4()),
+            "name": data.get("name"),
+            "price": price,
+            "description": data.get("description", ""),
+            "category": data.get("category", "عام")
         }
         goods.append(new_item)
         save_json(GOODS_FILE, goods)
