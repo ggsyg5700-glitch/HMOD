@@ -12,3 +12,4 @@ jobs:
     steps:
       - name: Call /ping endpoint
         run: curl -s https://hmod-dbl8.onrender.com/ping
+# refresh schedule
