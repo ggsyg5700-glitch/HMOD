@@ -902,19 +902,47 @@ window.clearOrdersLog = async function() {
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    const mainApp = document.getElementById('main-app');
+    const mainApp   = document.getElementById('main-app');
     const authScreen = document.getElementById('auth-screen');
+
+    // تسجيل دخول تلقائي إذا كان التوكن محفوظاً من جلسة سابقة
+    const savedToken = localStorage.getItem('admin_token');
+    if (savedToken) {
+        // أظهر شاشة تحميل خفيفة
+        if (authScreen) {
+            authScreen.innerHTML = `
+                <div style="text-align:center; color:#8892a4;">
+                    <i class="fas fa-spinner fa-spin fa-2x" style="color:#5b8ef5; margin-bottom:14px; display:block;"></i>
+                    <span style="font-size:0.9rem; font-weight:600;">جاري التحقق...</span>
+                </div>`;
+            authScreen.style.display = 'flex';
+        }
+        // التحقق من صلاحية التوكن عبر API
+        fetch(API_BASE + '/api/status', {
+            headers: { 'Authorization': savedToken },
+            signal: AbortSignal.timeout(8000)
+        }).then(res => {
+            if (res.ok || res.status === 200) {
+                openDashboard(true);
+            } else {
+                localStorage.removeItem('admin_token');
+                location.reload();
+            }
+        }).catch(() => {
+            // فشل الاتصال — أعد تحميل الصفحة لإظهار شاشة الدخول
+            location.reload();
+        });
+        return;
+    }
 
     if (mainApp) mainApp.style.display = 'none';
     if (authScreen) authScreen.style.display = 'flex';
 
-    // إظهار زر البصمة إذا سُجِّلت سابقاً — بغض النظر عن دعم المتصفح الحالي
-    // (يتم التحقق من الدعم عند الضغط على الزر وليس هنا)
+    // إظهار زر البصمة إذا سُجِّلت سابقاً
     if (localStorage.getItem('biometric_registered')) {
         const bioBtn = document.getElementById('biometric-btn');
         if (bioBtn) {
             bioBtn.style.display = 'block';
-            // إذا كان المتصفح لا يدعم WebAuthn — أظهر تنبيهاً صغيراً
             if (!window.PublicKeyCredential) {
                 bioBtn.title = 'افتح في Chrome لاستخدام البصمة';
                 bioBtn.style.opacity = '0.6';
