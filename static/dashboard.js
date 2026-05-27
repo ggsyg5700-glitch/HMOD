@@ -697,11 +697,13 @@ window.showSection = function(sectionId) {
         backBtn.style.setProperty('display', (sectionId === 'status') ? 'none' : 'block', 'important');
     }
 
-    // Show the target section
+    // Show the target section with animation
     const target = document.getElementById(sectionId + '-section');
     if (target) {
         target.style.setProperty('display', 'block', 'important');
-        target.classList.add('fade-in');
+        target.classList.remove('section-active');
+        void target.offsetWidth; // force reflow to restart animation
+        target.classList.add('section-active');
     }
 
     // Load data
@@ -898,6 +900,40 @@ window.clearOrdersLog = async function() {
     } else {
         window.showToast('فشل مسح السجل: ' + (res.message || 'خطأ'), 'danger');
     }
+};
+
+// ======== Ripple Effect على كل الأزرار ========
+document.addEventListener('pointerdown', function(e) {
+    const btn = e.target.closest('button, .btn, .btn-action-green, .btn-action-blue, .btn-action-yellow, .btn-action-cyan');
+    if (!btn) return;
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple');
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+}, { passive: true });
+
+// ======== أنيميشن عداد الأرقام ========
+window.animateCounter = function(el, target, duration = 800) {
+    if (!el) return;
+    const start = parseInt(el.textContent.replace(/[^\d]/g, '')) || 0;
+    const range = target - start;
+    if (range === 0) return;
+    const startTime = performance.now();
+    const update = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        el.textContent = Math.round(start + range * ease).toLocaleString('ar');
+        if (progress < 1) requestAnimationFrame(update);
+        else {
+            el.classList.add('bump');
+            el.addEventListener('animationend', () => el.classList.remove('bump'), { once: true });
+        }
+    };
+    requestAnimationFrame(update);
 };
 
 // Initialization

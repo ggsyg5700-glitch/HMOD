@@ -319,6 +319,101 @@ body {
 .fade-in { animation: fadeIn 0.4s ease-out forwards; }
 .section-fade { animation: fadeIn 0.5s ease-out forwards; }
 
+/* ======== أنيميشن دخول القسم ======== */
+@keyframes sectionSlideIn {
+    from { opacity:0; transform: translateY(18px) scale(0.985); }
+    to   { opacity:1; transform: translateY(0)    scale(1);     }
+}
+.content-section.section-active {
+    animation: sectionSlideIn 0.38s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+/* ======== أنيميشن البطاقات بالتتابع (stagger) ======== */
+@keyframes cardPop {
+    from { opacity:0; transform: translateY(22px) scale(0.96); }
+    to   { opacity:1; transform: translateY(0)    scale(1);    }
+}
+.stat-card { animation: cardPop 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+.col-md-3:nth-child(1) .stat-card { animation-delay: 0.05s; }
+.col-md-3:nth-child(2) .stat-card { animation-delay: 0.12s; }
+.col-md-3:nth-child(3) .stat-card { animation-delay: 0.19s; }
+.col-md-3:nth-child(4) .stat-card { animation-delay: 0.26s; }
+
+/* ======== Ripple Effect على الأزرار ======== */
+.btn, button, .btn-action-green, .btn-action-blue,
+.btn-action-yellow, .btn-action-cyan, .btn-approve,
+.btn-reject, .btn-edit, .btn-delete, .btn-balance,
+.btn-primary, .btn-success, .btn-outline-secondary {
+    position: relative !important;
+    overflow: hidden !important;
+}
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    transform: scale(0);
+    animation: rippleAnim 0.55s linear;
+    pointer-events: none;
+    z-index: 10;
+}
+@keyframes rippleAnim {
+    to { transform: scale(4); opacity: 0; }
+}
+
+/* ======== ضغطة الزر (press) ======== */
+.btn:active, button:active,
+.btn-action-green:active, .btn-action-blue:active,
+.btn-action-yellow:active, .btn-action-cyan:active {
+    transform: scale(0.94) !important;
+    transition: transform 0.1s ease !important;
+}
+
+/* ======== Skeleton Loading ======== */
+@keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, #1e2637 25%, #262e42 50%, #1e2637 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 10px;
+    color: transparent !important;
+}
+
+/* ======== عداد الأرقام ======== */
+.stat-number {
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.stat-number.bump {
+    animation: numBump 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes numBump {
+    0%   { transform: scale(1);    }
+    50%  { transform: scale(1.18); }
+    100% { transform: scale(1);    }
+}
+
+/* ======== أنيميشن Toast ======== */
+@keyframes toastSlide {
+    from { opacity:0; transform: translateX(40px) scale(0.92); }
+    to   { opacity:1; transform: translateX(0)    scale(1);    }
+}
+.toast.showing { animation: toastSlide 0.32s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+/* ======== تأثير hover على صفوف الجدول ======== */
+.table-hover tbody tr {
+    transition: background 0.18s ease, transform 0.18s ease;
+}
+.table-hover tbody tr:hover {
+    background: #1e2637 !important;
+    transform: translateX(-2px);
+}
+
+/* ======== nav-link أنيميشن أسرع ======== */
+.nav-link { transition: all 0.18s cubic-bezier(0.22,1,0.36,1) !important; }
+
 @media (max-width: 768px) {
     .main-content { padding: 14px; }
     .content-section { padding: 14px; min-height: auto; }
