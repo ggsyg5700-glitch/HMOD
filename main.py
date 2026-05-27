@@ -7,6 +7,8 @@ import datetime
 import zipfile
 import io
 import time
+import asyncio
+import threading
 from collections import defaultdict
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from functools import wraps
@@ -1017,8 +1019,9 @@ Thread(target=_keep_alive, daemon=True).start()
 def run_flask():
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
 
-# متغير عالمي للـ application
+# متغيرات عالمية للـ application والـ loop الدائم
 bot_application = None
+_bot_loop = None
 
 def build_application():
     global bot_application
@@ -1173,16 +1176,15 @@ def api_public_recharge():
 # --- Webhook endpoint لـ Render ---
 @app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
 def webhook_handler():
-    import asyncio
-    if bot_application is None:
+    if bot_application is None or _bot_loop is None:
         return "Bot not ready", 503
     try:
         data = request.get_json(force=True)
         update = Update.de_json(data, bot_application.bot)
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(bot_application.process_update(update))
-        loop.close()
+        asyncio.run_coroutine_threadsafe(
+            bot_application.process_update(update),
+            _bot_loop
+        )
     except Exception as e:
         print(f"Webhook error: {e}")
     return "OK", 200
@@ -1192,26 +1194,41 @@ def run_bot_polling(application):
     application.run_polling(drop_pending_updates=True)
 
 def run_bot_webhook(application):
-    import asyncio
-    webhook_path = f"/webhook/{BOT_TOKEN}"
-    full_webhook_url = f"{WEBHOOK_URL}{webhook_path}"
-    print(f"Setting webhook: {full_webhook_url}")
-    resp = requests.post(
-        f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook",
-        json={"url": full_webhook_url, "drop_pending_updates": True},
-        timeout=15
-    )
-    print(f"Webhook set: {resp.json()}")
+    global _bot_loop
+    import asyncio, threading, time
+
+    # أنشئ loop دائم واحد ويشتغل في خلفية
+    _bot_loop = asyncio.new_event_loop()
 
     async def init_app():
         await application.initialize()
         await application.start()
+        print(f"Bot running in Webhook mode on port {PORT}")
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(init_app())
-    print(f"Bot running in Webhook mode on port {PORT}")
-    # Flask يستقبل الـ updates — لا نحتاج loop هنا
+    def start_loop():
+        asyncio.set_event_loop(_bot_loop)
+        _bot_loop.run_until_complete(init_app())
+        _bot_loop.run_forever()
+
+    t = threading.Thread(target=start_loop, daemon=True)
+    t.start()
+    time.sleep(2)  # انتظر تهيئة البوت
+
+    # سجّل الـ webhook مع Telegram
+    webhook_path = f"/webhook/{BOT_TOKEN}"
+    full_webhook_url = f"{WEBHOOK_URL}{webhook_path}"
+    print(f"Setting webhook: {full_webhook_url}")
+    try:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook",
+            json={"url": full_webhook_url, "drop_pending_updates": True},
+            timeout=15
+        )
+        print(f"Webhook set: {resp.json()}")
+    except Exception as e:
+        print(f"Webhook registration error: {e}")
+
+    # Flask يستقبل الـ updates — الـ loop يعالجها في الخلفية
     run_flask()
 
 if __name__ == "__main__":
