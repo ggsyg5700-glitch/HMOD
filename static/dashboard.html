@@ -131,7 +131,7 @@
                             <div class="card bg-dark border-secondary p-4 rounded-4 shadow-lg">
                                 <h4 class="text-white mb-4"><i class="fas fa-tools me-2 text-accent"></i>أدوات التحكم السريع</h4>
                                 <div class="d-flex flex-wrap gap-3">
-                                    <button class="btn btn-action-green px-4 py-3 flex-grow-1" onclick="sendBackupToBot()" style="touch-action:manipulation;">
+                                    <button id="btn-backup" class="btn btn-action-green px-4 py-3 flex-grow-1" onclick="sendBackupToBot()" style="touch-action:manipulation;">
                                         <i class="fas fa-file-export mb-2 d-block fa-2x"></i>
                                         إرسال نسخة للبوت
                                     </button>
@@ -147,7 +147,7 @@
                                         <i class="fas fa-sync-alt mb-2 d-block fa-2x"></i>
                                         تحديث حالة النظام
                                     </button>
-                                    <button class="btn px-4 py-3 flex-grow-1" onclick="clearOrdersLog()" style="touch-action:manipulation; background:linear-gradient(135deg,#6c1a1a,#a31111); color:#fff; border:1px solid #dc354544; border-radius:12px;">
+                                    <button id="btn-clear-log" class="btn px-4 py-3 flex-grow-1" onclick="clearOrdersLog()" style="touch-action:manipulation; background:linear-gradient(135deg,#6c1a1a,#a31111); color:#fff; border:1px solid #dc354544; border-radius:12px;">
                                         <i class="fas fa-trash-alt mb-2 d-block fa-2x"></i>
                                         مسح السجل
                                     </button>
@@ -267,7 +267,7 @@
                             <label class="form-label text-accent fw-bold">إضافة رقم تحويل جديد</label>
                             <div class="input-group">
                                 <input type="text" id="new-deposit-number" class="form-control bg-secondary text-white border-0 p-3" placeholder="أدخل رقم التحويل هنا">
-                                <button class="btn btn-success px-4 fw-bold" onclick="addDepositNumber()">إضافة الآن</button>
+                                <button id="btn-add-deposit" class="btn btn-success px-4 fw-bold" onclick="addDepositNumber()">إضافة الآن</button>
                             </div>
                         </div>
                         <h5 class="text-accent mb-3 fw-bold border-bottom border-secondary pb-2">الأرقام المتاحة حالياً:</h5>
@@ -424,7 +424,7 @@
                     <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal" onclick="window._approveCancel()" style="border-radius:12px; min-width:110px;">
                         <i class="fas fa-times me-2"></i>إلغاء
                     </button>
-                    <button type="button" class="btn fw-bold px-4" onclick="window._approveConfirmed()" style="background: linear-gradient(135deg,#28a745,#20c745); color:#fff; border-radius:12px; min-width:130px; box-shadow:0 4px 15px rgba(40,167,69,0.4);">
+                    <button id="btn-approve-final" type="button" class="btn fw-bold px-4" onclick="window._approveConfirmed()" style="background: linear-gradient(135deg,#28a745,#20c745); color:#fff; border-radius:12px; min-width:130px; box-shadow:0 4px 15px rgba(40,167,69,0.4);">
                         <i class="fas fa-check me-2"></i>موافقة نهائية
                     </button>
                 </div>

@@ -447,7 +447,7 @@ window.loadOrders = async function() {
                     ">
                         <i class="fas fa-check me-2"></i>قبول
                     </button>
-                    <button onclick="window.updateOrderStatus('${o.id}', 'مرفوض')" style="
+                    <button onclick="window.rejectOrder(this, '${o.id}')" style="
                         background: linear-gradient(135deg, #dc3545, #ff4757);
                         color: white; border: none; border-radius: 10px;
                         padding: 10px 28px; font-weight: 700; cursor: pointer;
@@ -730,15 +730,17 @@ window.loadDepositNumbers = async function() {
 
 window.addDepositNumber = async function() {
     const numEl = document.getElementById('new-deposit-number');
+    const btn   = document.getElementById('btn-add-deposit');
     if (!numEl) return;
-    const num = numEl.value;
-    if (num) {
-        const res = await window.apiCall('/api/settings/deposit-numbers', 'POST', { number: num });
-        if (res.success) { 
-            numEl.value = ''; 
-            window.loadDepositNumbers(); 
-            window.showToast("تم الإضافة بنجاح");
-        }
+    const num = numEl.value.trim();
+    if (!num) { numEl.focus(); return; }
+    window.btnLoading(btn, 'جاري الإضافة...');
+    const res = await window.apiCall('/api/settings/deposit-numbers', 'POST', { number: num });
+    window.btnRestore(btn);
+    if (res.success) { 
+        numEl.value = ''; 
+        window.loadDepositNumbers(); 
+        window.showToast("تم الإضافة بنجاح");
     }
 };
 
@@ -758,23 +760,29 @@ window.deleteDepositNumber = async function(num) {
     }
 };
 
-window.updateOrderStatus = function(id, status, creditAmount) {
+window.updateOrderStatus = async function(id, status, creditAmount) {
     const body = { status };
     if (creditAmount !== undefined && creditAmount !== null) {
         body.credit_amount = creditAmount;
     }
-    window.apiCall(`/api/orders/${id}/status`, 'PUT', body).then(res => { 
-        if (res.success) {
-            window.loadOrders();
-            if (creditAmount > 0) {
-                window.showToast(`✅ تمت الموافقة وتم إضافة ${creditAmount} ل.س لرصيد الزبون`);
-            } else {
-                window.showToast(`تم التحديث بنجاح`);
-            }
+    const res = await window.apiCall(`/api/orders/${id}/status`, 'PUT', body);
+    if (res.success) {
+        window.loadOrders();
+        if (creditAmount > 0) {
+            window.showToast(`✅ تمت الموافقة وتم إضافة ${creditAmount} ل.س لرصيد الزبون`);
         } else {
-            window.showToast(`فشل التحديث: ${res.message || 'خطأ غير معروف'}`, 'danger');
+            window.showToast(`تم التحديث بنجاح`);
         }
-    });
+    } else {
+        window.showToast(`فشل التحديث: ${res.message || 'خطأ غير معروف'}`, 'danger');
+    }
+    return res;
+};
+
+window.rejectOrder = async function(btn, id) {
+    window.btnLoading(btn, 'جاري الرفض...');
+    await window.updateOrderStatus(id, 'مرفوض');
+    window.btnRestore(btn);
 };
 
 window._pendingApproveId = null;
@@ -850,15 +858,19 @@ window._approveCancel = function() {
     window._pendingApproveUsername = null;
 };
 
-window._approveConfirmed = function() {
+window._approveConfirmed = async function() {
     const modal2 = bootstrap.Modal.getOrCreateInstance(document.getElementById('approveConfirmModal2'));
+    const finalBtn = document.getElementById('btn-approve-final');
+    if (!window._pendingApproveId) { modal2.hide(); return; }
+    window.btnLoading(finalBtn, 'جاري الموافقة...');
+    const id = window._pendingApproveId;
+    const credit = window._pendingCreditAmount;
+    window._pendingApproveId = null;
+    window._pendingCreditAmount = null;
+    window._pendingApproveUsername = null;
+    await window.updateOrderStatus(id, 'مكتمل', credit);
+    window.btnRestore(finalBtn);
     modal2.hide();
-    if (window._pendingApproveId) {
-        window.updateOrderStatus(window._pendingApproveId, 'مكتمل', window._pendingCreditAmount);
-        window._pendingApproveId = null;
-        window._pendingCreditAmount = null;
-        window._pendingApproveUsername = null;
-    }
 };
 
 window.editBalance = async function(uid) {
@@ -873,8 +885,10 @@ window.editBalance = async function(uid) {
 };
 
 window.sendBackupToBot = async function() {
-    window.showToast("جاري التجهيز والإرسال...", "info");
+    const btn = document.getElementById('btn-backup');
+    window.btnLoading(btn, 'جاري الإرسال...');
     const res = await window.apiCall('/api/backup/send-to-bot', 'POST');
+    window.btnRestore(btn);
     if (res.success) {
         window.showToast("تم الإرسال للبوت بنجاح");
     } else {
@@ -893,13 +907,37 @@ window.clearOrdersLog = async function() {
         'هل أنت متأكد؟'
     );
     if (!confirmed) return;
+    const btn = document.getElementById('btn-clear-log');
+    window.btnLoading(btn, 'جاري المسح...');
     const res = await window.apiCall('/api/orders/clear', 'DELETE');
+    window.btnRestore(btn);
     if (res.success) {
         window.showToast(`✅ تم مسح ${res.deleted} طلب من السجل`);
         window.loadOrders();
     } else {
         window.showToast('فشل مسح السجل: ' + (res.message || 'خطأ'), 'danger');
     }
+};
+
+// ======== مساعد تحميل الأزرار ========
+window.btnLoading = function(btn, loadingText) {
+    if (!btn) return;
+    btn._originalHtml = btn.innerHTML;
+    btn._originalDisabled = btn.disabled;
+    btn.disabled = true;
+    btn.style.opacity = '0.75';
+    btn.style.pointerEvents = 'none';
+    const text = loadingText || 'جاري...';
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${text}`;
+};
+
+window.btnRestore = function(btn) {
+    if (!btn || !btn._originalHtml) return;
+    btn.disabled = btn._originalDisabled || false;
+    btn.style.opacity = '';
+    btn.style.pointerEvents = '';
+    btn.innerHTML = btn._originalHtml;
+    btn._originalHtml = null;
 };
 
 // ======== Ripple Effect على كل الأزرار ========
