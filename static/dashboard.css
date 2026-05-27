@@ -360,12 +360,43 @@ body {
     to { transform: scale(4); opacity: 0; }
 }
 
-/* ======== ضغطة الزر (press) ======== */
-.btn:active, button:active,
+/* ======== ضغطة الزر الشاملة (press feedback) ======== */
+button, .btn,
+.btn-action-green, .btn-action-blue,
+.btn-action-yellow, .btn-action-cyan,
+.btn-approve, .btn-reject, .btn-edit,
+.btn-delete, .btn-balance,
+.btn-primary, .btn-success, .btn-danger,
+.btn-info, .btn-warning, .btn-outline-secondary,
+.nav-link {
+    transition: transform 0.13s cubic-bezier(0.25,0.46,0.45,0.94),
+                box-shadow  0.13s ease,
+                background  0.25s ease,
+                opacity     0.13s ease !important;
+}
+button:active, .btn:active,
 .btn-action-green:active, .btn-action-blue:active,
-.btn-action-yellow:active, .btn-action-cyan:active {
-    transform: scale(0.94) !important;
-    transition: transform 0.1s ease !important;
+.btn-action-yellow:active, .btn-action-cyan:active,
+.btn-approve:active, .btn-reject:active,
+.btn-edit:active, .btn-delete:active,
+.btn-balance:active,
+.btn-primary:active, .btn-success:active,
+.btn-danger:active, .btn-info:active,
+.btn-warning:active, .btn-outline-secondary:active {
+    transform: scale(0.91) !important;
+    opacity: 0.85 !important;
+    transition: transform 0.07s ease, opacity 0.07s ease !important;
+}
+.nav-link:active {
+    transform: scale(0.93) translateX(-2px) !important;
+    opacity: 0.8 !important;
+    transition: transform 0.07s ease, opacity 0.07s ease !important;
+}
+/* أزرار الطلبات المولّدة ديناميكياً (inline style) */
+.order-btn-press:active,
+.order-btn-press.pressed {
+    transform: scale(0.91) !important;
+    opacity: 0.8 !important;
 }
 
 /* ======== Skeleton Loading ======== */

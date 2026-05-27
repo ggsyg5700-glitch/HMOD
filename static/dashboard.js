@@ -940,10 +940,16 @@ window.btnRestore = function(btn) {
     btn._originalHtml = null;
 };
 
-// ======== Ripple Effect على كل الأزرار ========
+// ======== Ripple + Press على كل الأزرار (بما فيها الديناميكية) ========
 document.addEventListener('pointerdown', function(e) {
-    const btn = e.target.closest('button, .btn, .btn-action-green, .btn-action-blue, .btn-action-yellow, .btn-action-cyan');
-    if (!btn) return;
+    const btn = e.target.closest('button, .btn, .nav-link');
+    if (!btn || btn.disabled) return;
+
+    // --- Ripple ---
+    const style = window.getComputedStyle(btn);
+    if (style.position === 'static') btn.style.position = 'relative';
+    if (style.overflow !== 'hidden') btn.style.overflow = 'hidden';
+
     const ripple = document.createElement('span');
     ripple.classList.add('ripple');
     const rect = btn.getBoundingClientRect();
@@ -951,6 +957,23 @@ document.addEventListener('pointerdown', function(e) {
     ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
     btn.appendChild(ripple);
     ripple.addEventListener('animationend', () => ripple.remove());
+
+    // --- Press scale (للأزرار الديناميكية التي لا تأخذ :active من CSS) ---
+    btn.style.transform = 'scale(0.91)';
+    btn.style.opacity   = '0.85';
+    btn.style.transition = 'transform 0.07s ease, opacity 0.07s ease';
+
+    const release = () => {
+        btn.style.transform = '';
+        btn.style.opacity   = '';
+        btn.style.transition = 'transform 0.18s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.18s ease';
+        btn.removeEventListener('pointerup',     release);
+        btn.removeEventListener('pointercancel', release);
+        btn.removeEventListener('pointerleave',  release);
+    };
+    btn.addEventListener('pointerup',     release, { once: true });
+    btn.addEventListener('pointercancel', release, { once: true });
+    btn.addEventListener('pointerleave',  release, { once: true });
 }, { passive: true });
 
 // ======== أنيميشن عداد الأرقام ========
