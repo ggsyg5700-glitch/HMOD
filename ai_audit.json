@@ -143,5 +143,51 @@
     "executed": true,
     "success": true,
     "error": null
+  },
+  {
+    "time": "2026-07-29 18:05:50",
+    "user_id": 123,
+    "question": "كم عدد المستخدمين؟",
+    "tool": null,
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "OPENROUTER_API_KEY غير موجود"
+  },
+  {
+    "time": "2026-07-29 18:05:53",
+    "user_id": 99,
+    "question": "test",
+    "tool": null,
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "اختبار بدون مفتاح"
+  },
+  {
+    "time": "2026-07-29 18:05:53",
+    "user_id": 99,
+    "question": "test",
+    "tool": "get_users_count",
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": true,
+    "success": true,
+    "error": null
+  },
+  {
+    "time": "2026-07-29 18:05:53",
+    "user_id": 99,
+    "question": "test",
+    "tool": "change_price",
+    "arguments": {
+      "item": "x"
+    },
+    "requires_confirm": true,
+    "executed": false,
+    "success": false,
+    "error": "تأكيد مطلوب"
   }
 ]
