@@ -112,7 +112,7 @@ def _get_client():
     return _client
 
 
-_MODEL = "gemini-2.5-flash"
+_MODEL = "gemini-2.0-flash"
 
 
 def ai_gemini_handler(question: str, user_id: int = None) -> str:
