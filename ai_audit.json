@@ -189,5 +189,74 @@
     "executed": false,
     "success": false,
     "error": "تأكيد مطلوب"
+  },
+  {
+    "time": "2026-07-29 18:45:56",
+    "user_id": 123,
+    "question": "كم عدد المستخدمين؟",
+    "tool": null,
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "HF_TOKEN غير موجود"
+  },
+  {
+    "time": "2026-07-29 18:46:02",
+    "user_id": 1,
+    "question": "كم عدد المستخدمين؟",
+    "tool": null,
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "HF_TOKEN غير موجود"
+  },
+  {
+    "time": "2026-07-29 18:46:02",
+    "user_id": 1,
+    "question": "كم عدد المستخدمين؟",
+    "tool": "get_users_count",
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": true,
+    "success": true,
+    "error": null
+  },
+  {
+    "time": "2026-07-29 18:46:02",
+    "user_id": 1,
+    "question": "كم طلب اليوم؟",
+    "tool": "get_orders_today",
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": true,
+    "success": true,
+    "error": null
+  },
+  {
+    "time": "2026-07-29 18:46:02",
+    "user_id": 2,
+    "question": "غيّر السعر",
+    "tool": "change_price",
+    "arguments": {
+      "item": "x",
+      "price": 10
+    },
+    "requires_confirm": true,
+    "executed": false,
+    "success": false,
+    "error": "في انتظار تأكيد الأدمن"
+  },
+  {
+    "time": "2026-07-29 18:46:02",
+    "user_id": null,
+    "question": "كم عدد المستخدمين؟",
+    "tool": "get_users_count",
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "صلاحية مرفوضة — مطلوب: admin"
   }
 ]
