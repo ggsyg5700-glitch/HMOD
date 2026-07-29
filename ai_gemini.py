@@ -70,7 +70,7 @@ _PERMISSION_LEVELS = {"admin": 1, "owner": 2}
 
 # ── إعدادات HF ───────────────────────────────
 _MODEL   = "Qwen/Qwen2.5-72B-Instruct"
-_API_URL = "https://api-inference.huggingface.co/v1/chat/completions"
+_API_URL = "https://router.huggingface.co/hf-inference/v1/chat/completions"
 
 _SYSTEM_INSTRUCTION = (
     "أنت مساعد إداري لبوت Telegram تجاري. "
