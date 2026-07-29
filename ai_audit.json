@@ -1,0 +1,48 @@
+[
+  {
+    "time": "2026-07-29 17:37:44",
+    "user_id": 123,
+    "question": "كم عدد المستخدمين؟",
+    "tool": null,
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "GROQ_API_KEY غير موجود"
+  },
+  {
+    "time": "2026-07-29 17:37:51",
+    "user_id": 1,
+    "question": "test q",
+    "tool": null,
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "اختبار"
+  },
+  {
+    "time": "2026-07-29 17:37:51",
+    "user_id": 1,
+    "question": "test q",
+    "tool": "get_users_count",
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": true,
+    "success": true,
+    "error": null
+  },
+  {
+    "time": "2026-07-29 17:37:51",
+    "user_id": 2,
+    "question": "test q2",
+    "tool": "change_price",
+    "arguments": {
+      "item": "x"
+    },
+    "requires_confirm": true,
+    "executed": false,
+    "success": false,
+    "error": "تأكيد مطلوب"
+  }
+]
