@@ -70,6 +70,9 @@ VIOLATIONS_FILE = "violations.json"
 # --- تخزين البيانات: PostgreSQL إن وُجد، وإلا ملفات JSON ---
 from database import load_json, save_json
 
+# --- المساعد الإداري ---
+from ai_manager import handle_admin_question
+
 def get_ar_time():
     now = datetime.datetime.now() + datetime.timedelta(hours=3)
     return now.strftime("%I:%M %p").replace("AM", "صباحاً").replace("PM", "مساءً") + " " + now.strftime("%Y-%m-%d")
@@ -112,6 +115,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     if is_admin:
         keyboard.append([KeyboardButton("📊 لوحة الإدارة", web_app=WebAppInfo(url="https://hmod.pages.dev"))])
+        keyboard.append([KeyboardButton("🤖 مساعد الإدارة")])
 
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     welcome_text = "أهلاً بك يا مطور! 🕵️‍♂️\nلوحة التحكم جاهزة تحت تصرفك." if is_dev else settings.get("welcome_message", "أهلاً بك!")
@@ -199,7 +203,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         users[uid]["last_seen"] = get_ar_time()
         save_json(USERS_FILE, users)
 
-    if text.startswith('/') or text in ["🛍️ السلع", "💰 رصيدي", "📦 طلباتي", "➕ شحن رصيد", "⚙️ الإعدادات", "👨‍💻 الدعم", "🏁 Start", "📊 لوحة الإدارة"]:
+    if text.startswith('/') or text in ["🛍️ السلع", "💰 رصيدي", "📦 طلباتي", "➕ شحن رصيد", "⚙️ الإعدادات", "👨‍💻 الدعم", "🏁 Start", "📊 لوحة الإدارة", "🤖 مساعد الإدارة"]:
         return
 
     if user_states.get(uid) == "awaiting_recharge_proof":
@@ -299,6 +303,18 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=ADMIN_ID, text=admin_txt, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
         user_states[uid] = None
         return
+
+    # ── وضع المساعد الإداري ──────────────────────────────────────────
+    if user_states.get(uid) == "awaiting_ai_question":
+        is_admin = users.get(uid, {}).get("role") == "admin" or str(uid) == str(ADMIN_ID)
+        if not is_admin:
+            user_states[uid] = None
+            return
+        await update.message.reply_text("⏳ جاري المعالجة...")
+        reply = handle_admin_question(text, user_id=int(uid))
+        await update.message.reply_text(reply)
+        return
+    # ─────────────────────────────────────────────────────────────────
 
     if str(uid) == str(ADMIN_ID):
         # الحل الثاني: معالجة الشحن المرتبط بمستخدم محدد عبر الزر
@@ -957,8 +973,24 @@ def build_application():
         elif text == "⚙️ الإعدادات": await settings_handler(update, context)
         elif text == "👨‍💻 الدعم": await support_handler(update, context)
         elif text == "🏁 Start": await start(update, context)
+        elif text == "🤖 مساعد الإدارة":
+            uid_ = str(update.effective_user.id)
+            is_admin_ = users.get(uid_, {}).get("role") == "admin" or str(uid_) == str(ADMIN_ID)
+            if not is_admin_:
+                await update.message.reply_text("⛔ هذه الميزة للأدمن فقط.")
+                return
+            user_states[uid_] = "awaiting_ai_question"
+            await update.message.reply_text(
+                "🤖 *المساعد الإداري*\n\n"
+                "أرسل سؤالك الآن. مثال:\n"
+                "• كم عدد المستخدمين؟\n"
+                "• كم طلب وصل اليوم؟\n"
+                "• ما حالة البوت؟\n\n"
+                "أرسل /start للخروج.",
+                parse_mode="Markdown"
+            )
 
-    application.add_handler(MessageHandler(filters.Text(["🛍️ السلع", "💰 رصيدي", "📦 طلباتي", "➕ شحن رصيد", "⚙️ الإعدادات", "👨‍💻 الدعم", "🏁 Start"]), menu_root))
+    application.add_handler(MessageHandler(filters.Text(["🛍️ السلع", "💰 رصيدي", "📦 طلباتي", "➕ شحن رصيد", "⚙️ الإعدادات", "👨‍💻 الدعم", "🏁 Start", "🤖 مساعد الإدارة"]), menu_root))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), text_handler))
     application.add_handler(CallbackQueryHandler(callback_handler))
     bot_application = application
