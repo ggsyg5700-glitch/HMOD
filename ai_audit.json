@@ -258,5 +258,16 @@
     "executed": false,
     "success": false,
     "error": "صلاحية مرفوضة — مطلوب: admin"
+  },
+  {
+    "time": "2026-07-29 18:56:30",
+    "user_id": 123,
+    "question": "كم عدد المستخدمين؟",
+    "tool": null,
+    "arguments": {},
+    "requires_confirm": false,
+    "executed": false,
+    "success": false,
+    "error": "HF_TOKEN غير موجود"
   }
 ]
